@@ -9,24 +9,25 @@ from listener import TestListener
 
 class Anthena(object):
 
-    def __init__(self, country, nodes):
+    def __init__(self, country, nodes, config):
 
         self.country = country
         self.nodes = nodes
+        self.config = config
 
     def run(self):
 
         print("Anthena running")
 
-        r = Retransmitter()
+        r = Retransmitter(self.config)
         r.start()
 
-        le = LeaderElection()
+        le = LeaderElection(self.config)
         le.start()
 
-        lt = LeaderTester()
+        lt = LeaderTester(self.config)
         lt.start()
 
-        l = TestListener()
+        l = TestListener(self.config)
         l.start()
 

@@ -1,4 +1,5 @@
 import sys
+import json
 import argparse
 from os import path
 
@@ -6,9 +7,12 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
 from stations.station import RadialStation
 
-def main(type_station, frequency):
+def main(mode, frequency):
 
-    s = RadialStation(type_station, frequency)
+    with open(config) as f:
+        config_data = json.load(f)
+
+    s = RadialStation(mode, frequency, config_data)
 
     s.run()
 
@@ -28,8 +32,13 @@ if __name__ == "__main__":
             help="Frequency of the form <ISO-COUNTRY>-<FREQ>"
     )
 
+    parser.add_argument(
+            "--config",
+            help="Topology configuration"
+    )
+
     args = parser.parse_args()
 
-    main(args.type, args.freq)
+    main(args.type, args.freq, args.config)
 
 
