@@ -1,0 +1,4 @@
+{
+	"input_endpoint": "127.0.0.1:5001",
+	"output_endpoint": "127.0.0.1:5011"
+}
