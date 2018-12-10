@@ -5,27 +5,23 @@ from os import path
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
-from stations.station import RadialStation
+from stations.receiver import Receiver
 
-def main(mode, frequency):
+def main(frequency, config):
 
     with open(config) as f:
         config_data = json.load(f)
 
-    s = RadialStation(mode, frequency, config_data)
+    s = Receiver(frequency, config_data)
 
     s.run()
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
-                        description='Radio Streaming station',
+                        description='Radio receiver',
                         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument(
-            "--type",
-            help="RX or TX",
-    )
 
     parser.add_argument(
             "--freq",
@@ -39,6 +35,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    main(args.type, args.freq, args.config)
+    main(args.freq, args.config)
 
 

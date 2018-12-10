@@ -28,7 +28,7 @@ class Listener(Process):
         
     def _get_current_messages(self):
         for socket_with_data in dict(self.poller.poll(100)):
-            topic, message = socket_with_data.recv_multipart(zmq.DONTWAIT)
+            topic, message = socket_with_data.recv_multipart()
             print(topic, message)
             yield topic, message
 
