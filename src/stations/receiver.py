@@ -15,7 +15,7 @@ class Receiver(Process):
             raise InvalidFrequency
 
         self.country = match.group(1)
-        self.broadcasters_endpoints = config['retransmitter_endpoints'][self.country]
+        self.broadcasters_endpoints = map(lambda x: x['output'], config['retransmitter_endpoints'][self.country])
 
         self.frequency_code = frequency_code
         self.player = AudioPlayer(config.get('bitrate', 16000))

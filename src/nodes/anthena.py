@@ -5,16 +5,16 @@ from os import path
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
-from rebroadcast.rxtx import Anthena
+from rebroadcast.transmission import Retransmitter
 
-def main(country, nodes, config):
+def main(country, node, config):
 
     with open(config) as f:
         config_data = json.load(f)
 
-    a = Anthena(country, nodes, config_data)
+    r = Retransmitter(country, int(node), config_data)
 
-    a.run()
+    r.run()
 
 if __name__ == "__main__":
 
@@ -28,9 +28,8 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-            "--nodes",
-            help="Number of replica nodes",
-            default=2
+            "--node",
+            help="Number of node"
     )
 
     parser.add_argument(
@@ -40,6 +39,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    main(args.country, args.nodes, args.config)
+    main(args.country, args.node, args.config)
 
 

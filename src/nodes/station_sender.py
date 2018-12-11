@@ -7,12 +7,12 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
 from stations.sender import Sender
 
-def main(frequency, config):
+def main(frequency, input_file, config):
 
     with open(config) as f:
         config_data = json.load(f)
 
-    s = Sender(frequency, config_data)
+    s = Sender(frequency, input_file, config_data)
 
     s.run()
 
@@ -29,12 +29,17 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+            "--input",
+            help="WAV input file"
+    )
+
+    parser.add_argument(
             "--config",
             help="Topology configuration"
     )
 
     args = parser.parse_args()
 
-    main(args.freq, args.config)
+    main(args.freq, args.input, args.config)
 
 
