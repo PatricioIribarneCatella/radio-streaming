@@ -15,23 +15,29 @@ class Leader(object):
         self.config = config
         self.aid = aid
 
-        self.fd = InterProcess("{}/{}".format(country, aid), "bind")
-        
-        le = InterNode()
-        le.bind(config["anthena"][country]["bind"], self.aid)
+        self.anthena = InterNode(cons.PUSH)
 
-        self.sender = InterNode()
+        self.monitor = InterProcess(cons.PUSH)
+        self.monitor.bind("monitor/{}-{}".format(country, aid))
+        
+        fd = InterProcess(cons.PULL)
+        fd.bind("fail/{}-{}".format(country, aid))
+        
+        le = InterNode(cons.PULL)
+        le.bind(config["anthena"][country][self.aid]["bind"])
+
         self.poller = Poller([fd, le])
 
     def monitor(self, message):
 
-        self.fd.send(message)
+        self.monitor.send(message)
 
     def send(self, message, receivers):
 
         for rid in receivers:
-            self.sender.connect(self.config["anthena"][self.country]["connect"], rid)
-            self.sender.send(message)
+            interface = self.config["anthena"][self.country][rid]["connect"]
+            self.anthena.connect(interface)
+            self.anthena.send(message)
 
     def recv(self):
 

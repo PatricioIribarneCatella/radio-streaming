@@ -5,3 +5,13 @@ import zmq
 POLLIN = zmq.POLLIN
 POLLOUT = zmq.POLLOUT
 TIMEOUT = 3
+
+# Middleware channel types
+
+REQ = zmq.REQ
+REP = zmq.REP
+PULL = zmq.PULL
+PUSH = zmq.PUSH
+PUB = zmq.PUB
+SUB = zmq.SUB
+

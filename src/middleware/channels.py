@@ -2,9 +2,8 @@ import zmq
 
 class InterProcess(object):
 
-    def __init__(self):
-        
-        self.socket = zmq.Context().socket(zmq.PULL)
+    def __init__(self, sock_type):
+        self.socket = zmq.Context().socket(sock_type)
 
     def bind(self, interface):
         self.socket.bind(interface)
@@ -24,15 +23,16 @@ class InterProcess(object):
 
 class InterNode(object):
 
-    def __init__(self):
-        self.socket = zmq.Context().socket(zmq.PUSH)
+    def __init__(self, sock_type):
+        self.socket = zmq.Context().socket(sock_type)
 
-    def bind(self, interface, nodeid):
+    def bind(self, interface):
         self.socket.bind("tcp:{}:{}".format(interface["ip"],
-                                interface["port"] + nodeid))
-    def connect(self, interface, nodeid):
+                                interface["port"]))
+
+    def connect(self, interface):
         self.socket.bind("tcp:{}:{}".format(interface["ip"],
-                                interface["port"] + nodeid))
+                                interface["port"]))
 
     def get_connection(self):
         return self.socket

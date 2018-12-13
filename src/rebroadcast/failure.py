@@ -17,10 +17,15 @@ class Detector(Process):
         self.country = country
         self.config = config
 
-        self.node = InterProcess("{}/{}".format(
-                        country, nodeid), "connect")
+        self.monitor = InterProcess(cons.PULL)
+        self.monitor.connect("monitor/{}-{}".format(
+                        country, nodeid))
+
+        self.fail = InterProcess(cons.PUSH)
+        self.fail.connect("fail/{}-{}".format(
+                        country, nodeid))
         
-        self.next = InterNode()
+        self.next = InterNode(cons.REQ)
 
         super(Detector, self).__init__()
 
@@ -28,16 +33,16 @@ class Detector(Process):
         
         # Receives id of the node
         # to be monitored
-        mtype, nid = self.node.recv()
+        mtype, nid = self.monitor.recv()
 
         # If the message type is "CLEAR"
         # it means the node is the 'Leader'
         # and it does not need to monitor any node
         while mtype == m.CLEAR_MONITOR:
-            mtype, nid = self.node.recv()
+            mtype, nid = self.monitor.recv()
 
-        self.next.connect(config["anthena"][self.country]["connect"],
-                          int(nid), timeout=1)
+        self.next.connect(config["anthena"][self.country][nid]["connect"],
+                          timeout=1)
 
     def run(self):
 
@@ -52,7 +57,7 @@ class Detector(Process):
 
             if error != None:
                 if error == cons.TIMEOUT:
-                    self.node.send({"mtype": m.FAIL})
+                    self.fail.send({"mtype": m.FAIL})
                     self._monitor_node()
                 else:
                     print("An error ocurred: {}".format(error))
