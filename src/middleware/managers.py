@@ -1,3 +1,11 @@
+import sys
+from os import path
+
+sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+
+import constants as cons
+from channels import InterNode, InterProcess, Poller
+
 class Leader(object):
 
     def __init__(self, country, nodes, aid, config):
