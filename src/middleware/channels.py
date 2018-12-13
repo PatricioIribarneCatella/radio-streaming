@@ -37,7 +37,8 @@ class InterNode(object):
         self.socket = zmq.Context().socket(sock_type)
 
     def bind(self, interface):
-        self.socket.bind("{tcp}{}:{}".format(tcp=TCP_CONN,
+        self.socket.bind("{}{}:{}".format(
+                                TCP_CONN,
                                 interface["ip"],
                                 interface["port"]))
 
@@ -46,7 +47,8 @@ class InterNode(object):
         if timeout > 0:
             self.socket.setsockopt(zmq.RECVTIMEO, timeout*1000)
 
-        self.socket.bind("{tcp}{}:{}".format(tcp=TCP_CONN,
+        self.socket.bind("{}{}:{}".format(
+                                TCP_CONN,
                                 interface["ip"],
                                 interface["port"]))
 
