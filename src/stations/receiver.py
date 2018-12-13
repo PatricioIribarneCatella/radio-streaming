@@ -2,6 +2,7 @@ import zmq
 from multiprocessing import Process
 from audio.player import AudioPlayer
 import re
+import random
 
 
 class InvalidFrequency(Exception):
@@ -9,14 +10,16 @@ class InvalidFrequency(Exception):
 
 class Receiver(Process):
 
-    def __init__(self, frequency_code, config):
+    def __init__(self, country, frequency_code, config):
         match = re.match(r'^(\w{2,3})-\d{2,3}\.\d$', frequency_code)
         if match is None:
             raise InvalidFrequency
 
-        self.country = match.group(1)
-        self.broadcasters_endpoints = map(lambda x: x['output'], config['retransmitter_endpoints'][self.country])
-
+        self.freq_country = match.group(1)
+        self.connection_country = country
+        if self.connection_country != self.freq_country:
+            self.admin_endpoint = random.choice(config['retransmitter_endpoints'][self.connection_country])['admin']
+        self.broadcasters_endpoints = map(lambda x: x['output'], config['retransmitter_endpoints'][self.connection_country])
         self.frequency_code = frequency_code
         self.player = AudioPlayer(config.get('bitrate', 16000))
 
@@ -32,6 +35,11 @@ class Receiver(Process):
             self.poller.register(new_broadcast_socket, zmq.POLLIN)
             self.broadcasters_sockets.append(new_broadcast_socket)
             new_broadcast_socket.setsockopt_string(zmq.SUBSCRIBE, self.frequency_code)
+        
+        if self.admin_endpoint:
+            self.admin_socket = self.context.socket(zmq.REQ)
+            self.admin_socket.connect('tcp://{}'.format(self.admin_endpoint))
+            self.admin_socket.send_json({'type': 'listen_other_country', 'frequency': self.frequency_code})
 
     def _get_chunks(self):
         for socket_with_data in dict(self.poller.poll(100)):

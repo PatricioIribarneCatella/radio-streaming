@@ -7,12 +7,12 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
 from stations.router import Router
 
-def main(config):
+def main(node, config):
 
     with open(config) as f:
         config_data = json.load(f)
 
-    r = Router(config_data)
+    r = Router(int(node), config_data)
 
     r.run()
 
@@ -29,8 +29,13 @@ if __name__ == "__main__":
             default='config.json'
     )
 
+    parser.add_argument(
+            "--node",
+            help="Number of node"
+    )
+
     args = parser.parse_args()
 
-    main(args.config)
+    main(args.node, args.config)
 
 

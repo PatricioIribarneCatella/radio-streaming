@@ -7,12 +7,12 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
 from stations.receiver import Receiver
 
-def main(frequency, config):
+def main(country, frequency, config):
 
     with open(config) as f:
         config_data = json.load(f)
 
-    s = Receiver(frequency, config_data)
+    s = Receiver(country, frequency, config_data)
 
     s.run()
 
@@ -33,8 +33,14 @@ if __name__ == "__main__":
             help="Topology configuration"
     )
 
+    parser.add_argument(
+            "--country",
+            help="Topology configuration",
+            default=None
+    )
+
     args = parser.parse_args()
 
-    main(args.freq, args.config)
+    main(args.country, args.freq, args.config)
 
 

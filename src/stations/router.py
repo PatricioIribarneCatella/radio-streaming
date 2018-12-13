@@ -6,10 +6,10 @@ import json
 END_TOKEN = 'END'
 
 class Router(Process):
-    def __init__(self, config):
-        self.input_endpoint = config['input_endpoint']
-        self.output_endpoint = config['output_endpoint']
-        self.number_of_threads = int(config.get('number_of_threads', 1))
+    def __init__(self, node_number, config):
+        self.input_endpoint = config['routers_endpoints'][node_number]['input']
+        self.output_endpoint = config['routers_endpoints'][node_number]['output']
+        self.number_of_threads = int(config['routers_endpoints'][node_number].get('number_of_threads', 1))
         super(Router, self).__init__()
 
     def _start_connections(self):
@@ -24,6 +24,7 @@ class Router(Process):
         self.output_socket.bind("tcp://{}".format(self.output_endpoint))
 
     def _get_message(self):
+        print('listening in  {}'.format(self.input_endpoint))
         return self.input_socket.recv_multipart()
     
     def _forward_message(self, topic, message):
