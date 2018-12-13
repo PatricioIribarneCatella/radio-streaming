@@ -16,7 +16,10 @@ class Anthena(object):
         self.config = config
         self.aid = aid
         
-        self.connection = Leader(self.country, self.nodes, self.aid)
+        self.connection = Leader(self.country,
+                                 self.nodes,
+                                 self.aid,
+                                 self.config)
 
         self.handlers = {
             m.ALIVE: self._react_on_alive,
