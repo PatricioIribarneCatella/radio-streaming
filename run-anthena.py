@@ -53,6 +53,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--anthenas",
         default=1,
+        type=int,
         help="Number of anthenas in that country"
     )
 
