@@ -1,3 +1,5 @@
+import zmq
+
 class InterProcess(object):
 
     def __init__(self):

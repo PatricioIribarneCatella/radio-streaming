@@ -1,5 +1,7 @@
+import zmq
+
 # Middleware connection constants
 
-POLLIN = 1
-POLLOUT = 2
+POLLIN = zmq.POLLIN
+POLLOUT = zmq.POLLOUT
 TIMEOUT = 3
