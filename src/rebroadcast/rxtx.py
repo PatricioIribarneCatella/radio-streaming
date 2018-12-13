@@ -3,8 +3,9 @@ from os import path
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
-from middleware.managers import Leader
+from middleware.managers import LeaderElection
 from rebroadcast.failure import Detector
+from rebroadcast.states import Leader, Normal
 import rebroadcast.messages as m
 
 class Anthena(object):
@@ -16,10 +17,10 @@ class Anthena(object):
         self.config = config
         self.aid = aid
         
-        self.connection = Leader(self.country,
-                                 self.nodes,
-                                 self.aid,
-                                 self.config)
+        self.connection = LeaderElection(self.country,
+                                         self.nodes,
+                                         self.aid,
+                                         self.config)
 
         self.handlers = {
             m.ALIVE: self._react_on_alive,

@@ -6,7 +6,7 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 import middleware.constants as cons
 from middleware.channels import InterNode, InterProcess, Poller
 
-class Leader(object):
+class LeaderElection(object):
 
     def __init__(self, country, nodes, aid, config):
         
