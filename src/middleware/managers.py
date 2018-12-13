@@ -17,8 +17,8 @@ class LeaderElection(object):
 
         self.anthena = InterNode(cons.PUSH)
 
-        self.monitor = InterProcess(cons.PUSH)
-        self.monitor.bind("monitor/{}-{}".format(country, aid))
+        self.monitorc = InterProcess(cons.PUSH)
+        self.monitorc.bind("monitor/{}-{}".format(country, aid))
         
         fd = InterProcess(cons.PULL)
         fd.bind("fail/{}-{}".format(country, aid))
@@ -30,7 +30,7 @@ class LeaderElection(object):
 
     def monitor(self, message):
 
-        self.monitor.send(message)
+        self.monitorc.send(message)
 
     def send(self, message, receivers):
 
