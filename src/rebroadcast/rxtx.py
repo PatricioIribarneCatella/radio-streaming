@@ -4,8 +4,8 @@ from os import path
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
 from middleware.managers import Leader
-from failure import Detector
-import messages as m
+from rebroadcast.failure import Detector
+import rebroadcast.messages as m
 
 class Anthena(object):
 
