@@ -4,6 +4,9 @@ IPC_SOCK_DIR = "/tmp/"
 TCP_CONN = "tcp://"
 IPC_CONN = "ipc://"
 
+class TimeOut(Exception):
+    pass
+
 class InterProcess(object):
 
     def __init__(self, sock_type):
@@ -38,7 +41,11 @@ class InterNode(object):
                                 interface["ip"],
                                 interface["port"]))
 
-    def connect(self, interface):
+    def connect(self, interface, timeout=0):
+    
+        if timeout > 0:
+            self.socket.setsockopt(zmq.RECVTIMEO, timeout*1000)
+
         self.socket.bind("{tcp}{}:{}".format(tcp=TCP_CONN,
                                 interface["ip"],
                                 interface["port"]))
@@ -50,7 +57,12 @@ class InterNode(object):
         self.socket.send_json(message)
 
     def recv(self):
-        data = self.socket.recv_json()
+        
+        try:
+            data = self.socket.recv_json()
+        except zmq.Again:
+            raise TimeOut()
+        
         return data["mtyper"], data["node"]
 
     def close(self):

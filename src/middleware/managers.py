@@ -3,8 +3,8 @@ from os import path
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
-import constants as cons
-from channels import InterNode, InterProcess, Poller
+import middleware.constants as cons
+from middleware.channels import InterNode, InterProcess, Poller
 
 class Leader(object):
 

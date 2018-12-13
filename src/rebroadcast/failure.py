@@ -5,9 +5,9 @@ from multiprocessing import Process
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
-from middleware.channels import InterProcess, InterNode
+from middleware.channels import InterProcess, InterNode, TimeOut
 import middleware.constants as cons
-import messages as m
+import rebroadcast.messages as m
 
 class Detector(Process):
 
@@ -53,14 +53,11 @@ class Detector(Process):
             self.next.send({"mtype": m.IS_ALIVE,
                             "node": self.nodeid})
 
-            msg, error = self.next.recv()
-
-            if error != None:
-                if error == cons.TIMEOUT:
-                    self.fail.send({"mtype": m.FAIL, "node": 0})
-                    self._monitor_node()
-                else:
-                    print("An error ocurred: {}".format(error))
+            try:
+                msg, nid = self.next.recv()
+            except TimeOut:
+                self.fail.send({"mtype": m.FAIL, "node": 0})
+                self._monitor_node()
             
             # Simulate time passed
             time.sleep(1)
