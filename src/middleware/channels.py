@@ -1,22 +1,29 @@
 import zmq
 
+IPC_SOCK_DIR = "/tmp/"
+TCP_CONN = "tcp://"
+IPC_CONN = "ipc://"
+
 class InterProcess(object):
 
     def __init__(self, sock_type):
         self.socket = zmq.Context().socket(sock_type)
 
     def bind(self, interface):
-        self.socket.bind(interface)
+        self.socket.bind(IPC_CONN + IPC_SOCK_DIR + interface)
 
     def connect(self, interface):
-        self.socket.connect(interface)
+        self.socket.connect(IPC_CONN + IPC_SOCK_DIR + interface)
 
     def get_connection(self):
         return self.socket
 
     def send(self, message):
+        self.socket.send_json(message)
 
     def recv(self):
+        data = self.socket.recv_json()
+        return data["mtyper"], data["node"]
 
     def close(self):
         self.socket.close()
@@ -27,19 +34,24 @@ class InterNode(object):
         self.socket = zmq.Context().socket(sock_type)
 
     def bind(self, interface):
-        self.socket.bind("tcp:{}:{}".format(interface["ip"],
+        self.socket.bind("{tcp}{}:{}".format(tcp=TCP_CONN,
+                                interface["ip"],
                                 interface["port"]))
 
     def connect(self, interface):
-        self.socket.bind("tcp:{}:{}".format(interface["ip"],
+        self.socket.bind("{tcp}{}:{}".format(tcp=TCP_CONN,
+                                interface["ip"],
                                 interface["port"]))
 
     def get_connection(self):
         return self.socket
 
     def send(self, message):
+        self.socket.send_json(message)
 
     def recv(self):
+        data = self.socket.recv_json()
+        return data["mtyper"], data["node"]
 
     def close(self):
         self.socket.close()

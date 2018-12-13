@@ -46,7 +46,7 @@ class Anthena(object):
 
         if nid > self.nodes:
             self.state = Leader()
-            self.connection.monitor({"mtype": m.CLEAR_MONITOR})
+            self.connection.monitor({"mtype": m.CLEAR_MONITOR, "node": 0})
             self.next = None
         else:
             self.connection.monitor({"mtype": m.START_MONITOR, "node": nid})
@@ -56,17 +56,17 @@ class Anthena(object):
 
         mtype = m.LEADER if self.state.leader() else m.NOT_LEADER
 
-        self.connection.send({"mtype": mtype, "from": self.aid}, [nid])
+        self.connection.send({"mtype": mtype, "node": self.aid}, [nid])
 
     def _react_on_alive_question(self, nid):
 
-        self.connection.send({"mtype": m.REPLY_ALIVE, "from": self.aid},
+        self.connection.send({"mtype": m.REPLY_ALIVE, "node": self.aid},
                                 [nid])
 
     def _recovery(self):
 
         # Notifies nodes with smaller priority that its alive
-        self.connection.send({"mtype": m.ALIVE, "from": self.aid},
+        self.connection.send({"mtype": m.ALIVE, "node": self.aid},
                                 self._lesser())
 
         nextid = self.aid + 1
@@ -74,7 +74,7 @@ class Anthena(object):
         if nextid > self.nodes:
             # This node is the leader
             self.state = Leader()
-            self.connection.monitor({"mtype": m.CLEAR_MONITOR})
+            self.connection.monitor({"mtype": m.CLEAR_MONITOR, "node": 0})
             self.next = None
         else:
             # Starts monitoring the next node

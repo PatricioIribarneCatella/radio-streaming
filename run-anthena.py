@@ -10,6 +10,7 @@ from subprocess import Popen
 
 PYTHON = "python3"
 NODES_DIR = "src/nodes/"
+CONFIG_DIR = "src/config.json"
 
 def run(country, anthenas):
 
@@ -18,6 +19,7 @@ def run(country, anthenas):
     for aid in range(1, anthenas + 1):
         p = Popen([PYTHON,
                    NODES_DIR + "anthena.py",
+                   "--config={}".format(CONFIG_DIR),
                    "--country={}".format(country),
                    "--nodes={}".format(anthenas),
                    "--aid={}".format(aid)])

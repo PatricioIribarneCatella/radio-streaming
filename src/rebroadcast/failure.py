@@ -51,13 +51,13 @@ class Detector(Process):
         while True:
 
             self.next.send({"mtype": m.IS_ALIVE,
-                            "from": self.nodeid})
+                            "node": self.nodeid})
 
             msg, error = self.next.recv()
 
             if error != None:
                 if error == cons.TIMEOUT:
-                    self.fail.send({"mtype": m.FAIL})
+                    self.fail.send({"mtype": m.FAIL, "node": 0})
                     self._monitor_node()
                 else:
                     print("An error ocurred: {}".format(error))
