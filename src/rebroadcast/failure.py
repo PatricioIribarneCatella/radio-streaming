@@ -34,17 +34,23 @@ class Detector(Process):
         # Receives id of the node
         # to be monitored
         mtype, nid = self.monitor.recv()
+        print("mtype: {}".format(mtype))
 
         # If the message type is "CLEAR"
         # it means the node is the 'Leader'
         # and it does not need to monitor any node
         while mtype == m.CLEAR_MONITOR:
             mtype, nid = self.monitor.recv()
-
+            print("mtype: {}".format(mtype))
+        
+        print("hola")
         self.next.connect(config["anthena"][self.country][str(nid)]["connect"],
                           timeout=1)
 
     def run(self):
+
+        print("Failure detector running. Country: {}, id: {}".format(
+                    self.country, self.nodeid))
 
         self._monitor_node()
         

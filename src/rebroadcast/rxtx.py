@@ -76,11 +76,13 @@ class Anthena(object):
         nextid = self.aid + 1
 
         if nextid > self.nodes:
+            print("node:{} is leader".format(self.aid))
             # This node is the leader
             self.state = Leader()
             self.connection.monitor({"mtype": m.CLEAR_MONITOR, "node": 0})
             self.next = None
         else:
+            print("node:{} is normal".format(self.aid))
             # Starts monitoring the next node
             self.connection.monitor({"mtype": m.START_MONITOR, "node": nextid})
             self.next = nextid
@@ -96,7 +98,8 @@ class Anthena(object):
 
     def run(self):
 
-        print("Anthena running")
+        print("Leader module running. Country: {}, id: {}".format(
+                    self.country, self.aid))
 
         d = Detector(self.country, self.aid, self.config)
         d.start()
