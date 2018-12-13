@@ -24,7 +24,7 @@ class Leader(object):
         fd.bind("fail/{}-{}".format(country, aid))
         
         le = InterNode(cons.PULL)
-        le.bind(config["anthena"][country][self.aid]["bind"])
+        le.bind(config["anthena"][country][str(self.aid)]["bind"])
 
         self.poller = Poller([fd, le])
 
@@ -35,7 +35,7 @@ class Leader(object):
     def send(self, message, receivers):
 
         for rid in receivers:
-            interface = self.config["anthena"][self.country][rid]["connect"]
+            interface = self.config["anthena"][self.country][str(rid)]["connect"]
             self.anthena.connect(interface)
             self.anthena.send(message)
 

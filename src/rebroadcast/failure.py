@@ -41,7 +41,7 @@ class Detector(Process):
         while mtype == m.CLEAR_MONITOR:
             mtype, nid = self.monitor.recv()
 
-        self.next.connect(config["anthena"][self.country][nid]["connect"],
+        self.next.connect(config["anthena"][self.country][str(nid)]["connect"],
                           timeout=1)
 
     def run(self):
