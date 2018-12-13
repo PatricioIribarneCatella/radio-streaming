@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     parser.add_argument(
             "--nodes",
-            type=int
+            type=int,
             help="Number of replica nodes",
             default=2
     )
@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
     parser.add_argument(
             "--aid",
-            type=int
+            type=int,
             help="Anthena id"
     )
 
