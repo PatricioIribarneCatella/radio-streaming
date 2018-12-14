@@ -26,7 +26,7 @@ class InterProcess(object):
 
     def recv(self):
         data = self.socket.recv_json()
-        return data["mtyper"], data["node"]
+        return data["mtype"], data["node"]
 
     def close(self):
         self.socket.close()
@@ -65,7 +65,7 @@ class InterNode(object):
         except zmq.Again:
             raise TimeOut()
         
-        return data["mtyper"], data["node"]
+        return data["mtype"], data["node"]
 
     def close(self):
         self.socket.close()
