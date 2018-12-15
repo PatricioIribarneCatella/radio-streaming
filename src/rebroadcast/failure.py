@@ -18,11 +18,11 @@ class Detector(Process):
         self.config = config
 
         self.monitor = InterProcess(cons.PULL)
-        self.monitor.connect("monitor/{}-{}".format(
+        self.monitor.connect("monitor-{}-{}".format(
                         country, nodeid))
 
         self.fail = InterProcess(cons.PUSH)
-        self.fail.connect("fail/{}-{}".format(
+        self.fail.connect("fail-{}-{}".format(
                         country, nodeid))
         
         self.next = InterNode(cons.REQ)

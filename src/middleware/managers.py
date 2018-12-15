@@ -18,10 +18,10 @@ class LeaderElection(object):
         self.anthena = InterNode(cons.PUSH)
 
         self.monitorc = InterProcess(cons.PUSH)
-        self.monitorc.bind("monitor/{}-{}".format(country, aid))
+        self.monitorc.bind("monitor-{}-{}".format(country, aid))
         
         fd = InterProcess(cons.PULL)
-        fd.bind("fail/{}-{}".format(country, aid))
+        fd.bind("fail-{}-{}".format(country, aid))
         
         le = InterNode(cons.PULL)
         le.bind(config["anthena"][country][str(self.aid)]["bind"])
