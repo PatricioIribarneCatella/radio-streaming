@@ -4,7 +4,7 @@ import argparse
 from subprocess import Popen
 
 #
-# Runs the anthena (and its replicas) that
+# Runs the antenna (and its replicas) that
 # belongs to a certain country 
 #
 
@@ -12,16 +12,16 @@ PYTHON = "python3"
 NODES_DIR = "src/nodes/"
 CONFIG_DIR = "src/config.json"
 
-def run(country, anthenas):
+def run(country, antennas):
 
     pids = []
 
-    for aid in range(1, anthenas + 1):
+    for aid in range(1, antennas + 1):
         p = Popen([PYTHON,
                    NODES_DIR + "anthena.py",
                    "--config={}".format(CONFIG_DIR),
                    "--country={}".format(country),
-                   "--nodes={}".format(anthenas),
+                   "--nodes={}".format(antennas),
                    "--aid={}".format(aid)])
         pids.append(p.pid)
 
@@ -33,31 +33,31 @@ def store(pids):
         for pid in pids:
             f.write(str(pid) + "\n")
 
-def main(country, anthenas):
+def main(country, antennas):
 
-    pids = run(country, anthenas)
+    pids = run(country, antennas)
 
     store(pids)
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
-                    description='Radio Streaming anthenas run script',
+                    description='Radio Streaming antennas run script',
                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument(
         "--country",
-        help="The country the anthenas belong to"
+        help="The country the antennas belong to"
     )
 
     parser.add_argument(
-        "--anthenas",
+        "--antennas",
         default=1,
         type=int,
-        help="Number of anthenas in that country"
+        help="Number of antennas in that country"
     )
 
     args = parser.parse_args()
 
-    main(args.country, args.anthenas)
+    main(args.country, args.antennas)
 
