@@ -1,6 +1,8 @@
 import sys
 from os import path
 
+import zmq
+
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
 import middleware.constants as cons
@@ -19,7 +21,7 @@ class LeaderElection(object):
 
         self.monitorc = InterProcess(cons.PUSH)
         self.monitorc.bind("monitor-{}-{}".format(country, aid))
-        
+
         fd = InterProcess(cons.PULL)
         fd.bind("fail-{}-{}".format(country, aid))
         
