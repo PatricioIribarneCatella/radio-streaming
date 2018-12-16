@@ -37,12 +37,13 @@ class Anthena(object):
 
         print("node: {} recv ALIVE from {}".format(self.aid, nid))
 
-        if (self.next > nid) or (self.next == None):
+        if (self.next == None) or (self.next > nid):
             
             self.connection.monitor({"mtype": m.START_MONITOR, "node": nid})
             
             if self.next == None:
                 self.state = Normal()
+                print("node:{} is normal".format(self.aid))
 
             self.next = nid
 

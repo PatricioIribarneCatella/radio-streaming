@@ -40,6 +40,10 @@ class Detector(Process):
         mtype, nid = self.monitor.recv()
         print("node: {} recv mtype: {}, nid: {}".format(self.aid, mtype, nid))
 
+        if mtype == m.CLEAR_MONITOR:
+            self.next.close()
+            self.next = InterNode(cons.REQ)
+
         # If the message type is "CLEAR"
         # it means the node is the 'Leader'
         # and it does not need to monitor any node
@@ -70,6 +74,7 @@ class Detector(Process):
 
             try:
                 msg, nid = self.next.recv()
+                print("node: {} - recv REPLY_ALIVE({}) from: {}".format(self.aid, msg, nid))
             except TimeOut:
                 self.fail.send({"mtype": m.FAIL, "node": self.monitor_node})
                 self._monitor_node()

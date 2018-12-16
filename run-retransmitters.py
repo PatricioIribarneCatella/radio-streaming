@@ -4,7 +4,7 @@ import argparse
 from subprocess import Popen
 
 #
-# Runs an antenna that
+# Runs the antenna (and its replicas) that
 # belongs to a certain country 
 #
 
@@ -12,17 +12,18 @@ PYTHON = "python3"
 NODES_DIR = "src/nodes/"
 CONFIG_DIR = "src/config.json"
 
-def run(country, aid, antennas):
+def run(country, antennas):
 
     pids = []
 
-    p = Popen([PYTHON,
-               NODES_DIR + "anthena.py",
-               "--config={}".format(CONFIG_DIR),
-               "--country={}".format(country),
-               "--nodes={}".format(antennas),
-               "--aid={}".format(aid)])
-    pids.append(p.pid)
+    for aid in range(1, antennas + 1):
+        p = Popen([PYTHON,
+                   NODES_DIR + "anthena.py",
+                   "--config={}".format(CONFIG_DIR),
+                   "--country={}".format(country),
+                   "--nodes={}".format(antennas),
+                   "--aid={}".format(aid)])
+        pids.append((p.pid, aid))
 
     return pids
 
@@ -30,11 +31,11 @@ def store(pids):
 
     with open("pids.store", "w+") as f:
         for pid in pids:
-            f.write(str(pid) + "\n")
+            f.write(str(pid[0]) + ":" + str(pid[1]) + "\n")
 
-def main(country, aid, antennas):
+def main(country, antennas):
 
-    pids = run(country, aid, antennas)
+    pids = run(country, antennas)
 
     store(pids)
 
@@ -50,12 +51,6 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--aid",
-        help="The antenna id",
-        type=int
-    )
-
-    parser.add_argument(
         "--antennas",
         default=1,
         type=int,
@@ -64,5 +59,5 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    main(args.country, args.aid, args.antennas)
+    main(args.country, args.antennas)
 
