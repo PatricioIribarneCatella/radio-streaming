@@ -38,18 +38,19 @@ class Detector(Process):
         # Receives id of the node
         # to be monitored
         mtype, nid = self.monitor.recv()
-        print("mtype: {}".format(mtype))
+        print("node: {} recv mtype: {}, nid: {}".format(self.aid, mtype, nid))
 
         # If the message type is "CLEAR"
         # it means the node is the 'Leader'
         # and it does not need to monitor any node
         while mtype == m.CLEAR_MONITOR:
             mtype, nid = self.monitor.recv()
-            print("mtype: {}".format(mtype))
+            print("node: {}, mtype: {}, nid: {}".format(self.aid, mtype, nid))
         
         print("hola")
-        self.next.connect(config["anthena"][self.country][str(nid)]["connect"],
-                          timeout=1)
+        self.monitor_node = nid
+        self.next.connect(self.config["anthena"][self.country][str(nid)]["connect"],
+                          timeout=3)
 
     def run(self):
 
@@ -63,13 +64,14 @@ class Detector(Process):
         
         while True:
 
+            print("node: {} - send IS_ALIVE to {}".format(self.aid, self.monitor_node))
             self.next.send({"mtype": m.IS_ALIVE,
                             "node": self.aid})
 
             try:
                 msg, nid = self.next.recv()
             except TimeOut:
-                self.fail.send({"mtype": m.FAIL, "node": 0})
+                self.fail.send({"mtype": m.FAIL, "node": self.monitor_node})
                 self._monitor_node()
             
             # Simulate time passed

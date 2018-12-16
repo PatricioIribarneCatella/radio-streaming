@@ -45,9 +45,9 @@ class InterNode(object):
     def connect(self, interface, timeout=0):
     
         if timeout > 0:
-            self.socket.setsockopt(zmq.RECVTIMEO, timeout*1000)
+            self.socket.setsockopt(zmq.RCVTIMEO, timeout*1000)
 
-        self.socket.bind("{}{}:{}".format(
+        self.socket.connect("{}{}:{}".format(
                                 TCP_CONN,
                                 interface["ip"],
                                 interface["port"]))
@@ -70,6 +70,21 @@ class InterNode(object):
     def close(self):
         self.socket.close()
 
+class Channel(object):
+
+    def __init__(self, socket):
+
+        self.s = socket
+    
+    def recv(self):
+
+        data = self.s.recv_json()
+        return data["mtype"], data["node"]
+
+    def send(self, message):
+
+        self.s.send_json(message)
+
 class Poller(object):
 
     def __init__(self, socks):
@@ -83,7 +98,9 @@ class Poller(object):
 
     def poll(self):
 
-        return dict(self.poller.poll())
+        sockets = self.poller.poll()
+
+        return list(map(lambda t: (Channel(t[0]), t[1]), sockets))
 
     def close(self):
         for s in self.socks:

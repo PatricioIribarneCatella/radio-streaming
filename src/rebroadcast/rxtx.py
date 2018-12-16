@@ -35,6 +35,8 @@ class Anthena(object):
 
     def _react_on_alive(self, nid):
 
+        print("node: {} recv ALIVE from {}".format(self.aid, nid))
+
         if (self.next > nid) or (self.next == None):
             
             self.connection.monitor({"mtype": m.START_MONITOR, "node": nid})
@@ -46,13 +48,19 @@ class Anthena(object):
 
     def _react_on_fail(self, nid):
 
+        print("node: {} recv FAIL from {}".format(self.aid, nid))
+
         nid += 1
 
         if nid > self.nodes:
+            print("node:{} is leader".format(self.aid))
+            # This node is the leader
             self.state = Leader()
             self.connection.monitor({"mtype": m.CLEAR_MONITOR, "node": 0})
             self.next = None
         else:
+            print("node:{} continue being normal".format(self.aid))
+            # Starts monitoring next node
             self.connection.monitor({"mtype": m.START_MONITOR, "node": nid})
             self.next = nid
 
@@ -63,6 +71,8 @@ class Anthena(object):
         self.connection.send({"mtype": mtype, "node": self.aid}, [nid])
 
     def _react_on_alive_question(self, nid):
+
+        print("node: {} recv IS_ALIVE from {}".format(self.aid, nid))
 
         self.connection.send({"mtype": m.REPLY_ALIVE, "node": self.aid},
                                 [nid])

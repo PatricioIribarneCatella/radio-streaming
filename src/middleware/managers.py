@@ -48,7 +48,7 @@ class LeaderElection(object):
         for s, poll_type in socks:
             if poll_type == cons.POLLIN:
                 msg, nid = s.recv()
-                print("msg: {}, nid: {}".format(msg, nid))
+                print("node: {} - recv msg: {}, nid: {}".format(self.aid, msg, nid))
                 yield msg, nid
 
 
