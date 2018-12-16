@@ -6,6 +6,7 @@ import zmq
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
 import middleware.constants as cons
+import rebroadcast.messages as m
 from middleware.channels import InterNode, InterProcess, Poller
 
 class LeaderElection(object):
@@ -22,13 +23,16 @@ class LeaderElection(object):
         self.monitorc = InterProcess(cons.PUSH)
         self.monitorc.bind("monitor-{}-{}".format(country, aid))
 
+        self.alive = InterNode(cons.REP)
+        self.alive.bind(config["anthena"][country][str(self.aid)]["alive"]["bind"])
+
         fd = InterProcess(cons.PULL)
         fd.bind("fail-{}-{}".format(country, aid))
         
         le = InterNode(cons.PULL)
         le.bind(config["anthena"][country][str(self.aid)]["bind"])
 
-        self.poller = Poller([fd, le])
+        self.poller = Poller([fd, le, self.alive])
 
     def monitor(self, message):
 
@@ -36,10 +40,13 @@ class LeaderElection(object):
 
     def send(self, message, receivers):
 
-        for rid in receivers:
-            interface = self.config["anthena"][self.country][str(rid)]["connect"]
-            self.anthena.connect(interface)
-            self.anthena.send(message)
+        if message["mtype"] == m.REPLY_ALIVE:
+            self.alive.send(message)
+        else:
+            for rid in receivers:
+                interface = self.config["anthena"][self.country][str(rid)]["connect"]
+                self.anthena.connect(interface)
+                self.anthena.send(message)
 
     def recv(self):
 

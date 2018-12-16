@@ -49,7 +49,7 @@ class Detector(Process):
         
         print("hola")
         self.monitor_node = nid
-        self.next.connect(self.config["anthena"][self.country][str(nid)]["connect"],
+        self.next.connect(self.config["anthena"][self.country][str(nid)]["alive"]["connect"],
                           timeout=3)
 
     def run(self):
