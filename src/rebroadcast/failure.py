@@ -31,7 +31,7 @@ class Detector(Process):
         self.fail.connect("fail-{}-{}".format(
                         self.country, self.aid))
         
-        self.next = InterNode(cons.REQ)
+        self.next = InterNode(cons.REQ, allow_relaxed=True)
 
     def _monitor_node(self):
 
@@ -40,9 +40,9 @@ class Detector(Process):
         mtype, nid = self.monitor.recv()
         print("node: {} recv mtype: {}, nid: {}".format(self.aid, mtype, nid))
 
-        if mtype == m.CLEAR_MONITOR:
-            self.next.close()
-            self.next = InterNode(cons.REQ)
+        # Close and create a new channel
+        #self.next.close()
+        #self.next = InterNode(cons.REQ)
 
         # If the message type is "CLEAR"
         # it means the node is the 'Leader'
@@ -55,6 +55,7 @@ class Detector(Process):
         self.monitor_node = nid
         self.next.connect(self.config["anthena"][self.country][str(nid)]["alive"]["connect"],
                           timeout=3)
+        print("hola2")
 
     def run(self):
 
@@ -79,8 +80,12 @@ class Detector(Process):
                 self.fail.send({"mtype": m.FAIL, "node": self.monitor_node})
                 self._monitor_node()
             
+            print("hola3")
+
             # Simulate time passed
             time.sleep(1)
+
+            print("hola4")
 
         self.node.close()
         self.next.close()

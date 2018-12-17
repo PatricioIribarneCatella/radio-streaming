@@ -33,8 +33,11 @@ class InterProcess(object):
 
 class InterNode(object):
 
-    def __init__(self, sock_type):
+    def __init__(self, sock_type, allow_relaxed=False):
         self.socket = zmq.Context().socket(sock_type)
+        if allow_relaxed and sock_type == zmq.REQ:
+            self.socket.setsockopt(zmq.REQ_RELAXED, 1)
+            self.socket.setsockopt(zmq.REQ_CORRELATE, 1)
 
     def bind(self, interface):
         self.socket.bind("{}{}:{}".format(
