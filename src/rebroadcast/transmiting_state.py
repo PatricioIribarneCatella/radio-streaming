@@ -1,7 +1,7 @@
 class InUseFreq(Exception):
     pass
 
-class State(object):
+class TransmitingState(object):
 
     def __init__(self):
         self.active_freqs = dict()

@@ -28,10 +28,6 @@ class Router(Process):
         return self.input_socket.recv_multipart()
     
     def _forward_message(self, topic, message):
-        print ('xxxxxxxxxxxxxxx')
-        print (topic)
-        print (message)
-        print ('xxxxxxxxxxxxxxx')
         self.output_socket.send_multipart([topic, message])
 
     def run(self):

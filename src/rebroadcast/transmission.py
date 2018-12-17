@@ -1,7 +1,8 @@
 from multiprocessing import Process
 import zmq
 from time import sleep
-from .state import State, InUseFreq
+from .transmiting_state import TransmitingState, InUseFreq
+from .listening_state import ListeningState
 import re
 import random
 
@@ -14,10 +15,10 @@ class Retransmitter(Process):
         self.output_endpoint = config['retransmitter_endpoints'][country][node_number]['output']
         self.admin_endpoint = config['retransmitter_endpoints'][country][node_number]['admin']
         self.routers_endpoints = list(map(lambda x: x['output'], config['routers_endpoints']))
-        print(list(self.routers_endpoints))
-        print(config['routers_endpoints'])
         self.outgoing_router = random.choice(config['routers_endpoints'])['input']
-        self.state = State()
+        self.transmitting_state = TransmitingState()
+        self.listening_state = ListeningState()
+        
 
     def _start_connections(self):
         self.context = zmq.Context()
@@ -53,13 +54,15 @@ class Retransmitter(Process):
 
 
     def _start_listening(self, frequency):
+        print('Listening on {}'.format(frequency))
+
         for router_socket in self.router_sockets:
             router_socket.setsockopt_string(zmq.SUBSCRIBE, frequency)
     
     def _stop_listening(self, frequency):
+        print('Stopping Listening on {}'.format(frequency))
         for router_socket in self.router_sockets:
             router_socket.setsockopt_string(zmq.UNSUBSCRIBE, frequency)
-        # TODO this should be a counter
 
     def _treat_query(self, query):
         freq_code = query['frequency']
@@ -83,28 +86,27 @@ class Retransmitter(Process):
         elif query['type'] == 'listen_other_country':
             if country == self.country:
                 return {'status': 'same_country'}
-            self._start_listening(freq_code)
+            should_start_listening = self.listening_state.add(freq_code)
+            if should_start_listening:
+                self._start_listening(freq_code)
         elif query['type'] == 'stop_listen_other_country':
             if country == self.country:
                 return {'status': 'same_country'}
-            self._stop_listening(freq_code)
+            should_stop_listening = self.listening_state.remove(freq_code)
+            if should_stop_listening:
+                self._stop_listening(freq_code)
         else:
             return {'status': 'not_implemented_query'}
         return {'status': 'ok'}
 
     def _respond_admin_queries(self):
-        try:
-            query = self.admin_socket.recv_json(zmq.DONTWAIT)
-            response = self._treat_query(query)
-            self.admin_socket.send_json(response)
-        except zmq.error.Again:
-            pass
-
+        query = self.admin_socket.recv_json()
+        response = self._treat_query(query)
+        self.admin_socket.send_json(response)
 
     def _retransmit(self):
         while True:
             for socket_with_data, _ in self.poller.poll(100):
-                print('receiving {} {}'.format(socket_with_data, _))
                 if socket_with_data is self.admin_socket:
                     self._respond_admin_queries()
                 else:
