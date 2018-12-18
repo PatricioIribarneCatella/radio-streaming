@@ -14,29 +14,25 @@ CONFIG_DIR = "src/config.json"
 
 def run(country, aid, antennas):
 
-    pids = []
-
     p = Popen([PYTHON,
                NODES_DIR + "anthena.py",
                "--config={}".format(CONFIG_DIR),
                "--country={}".format(country),
                "--nodes={}".format(antennas),
                "--aid={}".format(aid)])
-    pids.append((p.pid, aid))
 
-    return pids
+    return p.pid
 
-def store(pids):
+def store(pid, aid, country):
 
-    with open("pids.store", "w+") as f:
-        for pid in pids:
-            f.write(str(pid[0]) + ":" + str(pid[1]) + "\n")
+    with open("pids-{}-{}.store".format(country, aid), "a") as f:
+        f.write(str(pid) + "\n")
 
 def main(country, aid, antennas):
 
-    pids = run(country, aid, antennas)
+    pid = run(country, aid, antennas)
 
-    store(pids)
+    store(pid, aid, country)
 
 if __name__ == "__main__":
 

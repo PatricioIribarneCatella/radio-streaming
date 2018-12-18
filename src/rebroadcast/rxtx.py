@@ -119,6 +119,11 @@ class Anthena(object):
         hb = HeartbeatSender(self.country, self.aid, self.config)
         hb.start()
 
+        # Save pids to stop them after
+        with open("pids-{}-{}.store".format(self.country, self.aid), "a") as f:
+            f.write(str(d.pid) + "\n")
+            f.write(str(hb.pid) + "\n")
+
         # Set signal handler
         signal.signal(signal.SIGINT, self._sig_handler)
 

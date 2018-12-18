@@ -27,17 +27,17 @@ def run(country, antennas):
 
     return pids
 
-def store(pids):
+def store(pids, country):
 
-    with open("pids.store", "w+") as f:
-        for pid in pids:
-            f.write(str(pid[0]) + ":" + str(pid[1]) + "\n")
+    for pid, aid in pids:
+        with open("pids-{}-{}.store".format(country, aid), "a") as f:
+                f.write(str(pid) + "\n")
 
 def main(country, antennas):
 
     pids = run(country, antennas)
 
-    store(pids)
+    store(pids, country)
 
 if __name__ == "__main__":
 
