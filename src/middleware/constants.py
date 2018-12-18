@@ -4,7 +4,9 @@ import zmq
 
 POLLIN = zmq.POLLIN
 POLLOUT = zmq.POLLOUT
-TIMEOUT = 3
+
+HB_TIME = 2
+TIMEOUT = HB_TIME * 2
 
 # Middleware channel types
 

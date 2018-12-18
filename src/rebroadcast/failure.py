@@ -3,13 +3,11 @@ import time
 from os import path
 from multiprocessing import Process
 
-import zmq
-
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
-from middleware.channels import InterProcess, InterNode, TimeOut
-import middleware.constants as cons
 import rebroadcast.messages as m
+import middleware.constants as cons
+from middleware.channels import InterProcess, TopicInterNode, Poller
 
 class Detector(Process):
 
@@ -31,18 +29,16 @@ class Detector(Process):
         self.fail.connect("fail-{}-{}".format(
                         self.country, self.aid))
         
-        self.next = InterNode(cons.REQ, allow_relaxed=True)
+        self.next = TopicInterNode([""])
 
-    def _monitor_node(self):
+        self.poller = Poller([self.next, self.monitor])
+
+    def _monitor_node(self, first_time):
 
         # Receives id of the node
         # to be monitored
         mtype, nid = self.monitor.recv()
         print("node: {} recv mtype: {}, nid: {}".format(self.aid, mtype, nid))
-
-        # Close and create a new channel
-        #self.next.close()
-        #self.next = InterNode(cons.REQ)
 
         # If the message type is "CLEAR"
         # it means the node is the 'Leader'
@@ -52,10 +48,18 @@ class Detector(Process):
             print("node: {}, mtype: {}, nid: {}".format(self.aid, mtype, nid))
         
         print("hola")
+        
+        if not first_time:
+            self.next.disconnect(self.config["anthena"][self.country][str(self.monitor_node)]["alive"]["connect"])
+        
         self.monitor_node = nid
-        self.next.connect(self.config["anthena"][self.country][str(nid)]["alive"]["connect"],
-                          timeout=3)
+        self.next.connect(self.config["anthena"][self.country][str(nid)]["alive"]["connect"])
+        
         print("hola2")
+
+    def _start_monitor(self):
+
+        self._monitor_node(True)
 
     def run(self):
 
@@ -65,27 +69,31 @@ class Detector(Process):
         print("Failure detector running. Country: {}, id: {}".format(
                     self.country, self.aid))
 
-        self._monitor_node()
+        self._start_monitor()
         
         while True:
 
-            print("node: {} - send IS_ALIVE to {}".format(self.aid, self.monitor_node))
-            self.next.send({"mtype": m.IS_ALIVE,
-                            "node": self.aid})
+            socks = self.poller.poll(cons.TIMEOUT)
 
-            try:
-                msg, nid = self.next.recv()
-                print("node: {} - recv REPLY_ALIVE({}) from: {}".format(self.aid, msg, nid))
-            except TimeOut:
+            # Timeout passed
+            if len(socks) == 0:
                 self.fail.send({"mtype": m.FAIL, "node": self.monitor_node})
-                self._monitor_node()
-            
+                self._monitor_node(False)
+
+            for s, poll_type in socks:
+
+                msg, nid = s.recv()
+                
+                if msg == m.START_MONITOR:
+                    print("failure detector node: {} - recv START_MONITOR from: {}".format(self.aid, nid))
+                    self.next.disconnect(self.config["anthena"][self.country][str(self.monitor_node)]["alive"]["connect"])
+                    self.monitor_node = nid
+                    self.next.connect(self.config["anthena"][self.country][str(self.monitor_node)]["alive"]["connect"])
+
+                if msg == m.I_AM_ALIVE:
+                    print("failure detector node: {} - recv I_AM_ALIVE from: {}".format(self.aid, nid))
+
             print("hola3")
-
-            # Simulate time passed
-            time.sleep(1)
-
-            print("hola4")
 
         self.node.close()
         self.next.close()

@@ -33,11 +33,9 @@ class InterProcess(object):
 
 class InterNode(object):
 
-    def __init__(self, sock_type, allow_relaxed=False):
+    def __init__(self, sock_type):
+
         self.socket = zmq.Context().socket(sock_type)
-        if allow_relaxed and sock_type == zmq.REQ:
-            self.socket.setsockopt(zmq.REQ_RELAXED, 1)
-            self.socket.setsockopt(zmq.REQ_CORRELATE, 1)
 
     def bind(self, interface):
         self.socket.bind("{}{}:{}".format(
@@ -54,6 +52,14 @@ class InterNode(object):
                                 TCP_CONN,
                                 interface["ip"],
                                 interface["port"]))
+
+    def disconnect(self, interface):
+
+        if interface != None:
+            self.socket.disconnect("{}{}:{}".format(
+                                    TCP_CONN,
+                                    interface["ip"],
+                                    interface["port"]))
 
     def get_connection(self):
         return self.socket
@@ -72,6 +78,18 @@ class InterNode(object):
 
     def close(self):
         self.socket.close()
+
+class TopicInterNode(InterNode):
+
+    def __init__(self, topics):
+        super(TopicInterNode, self).__init__(zmq.SUB)
+        for topic in topics:
+            self.socket.setsockopt_string(zmq.SUBSCRIBE, topic)
+
+class PublishInterNode(InterNode):
+
+    def __init__(self):
+        super(PublishInterNode, self).__init__(zmq.PUB)
 
 class Channel(object):
 
@@ -99,9 +117,12 @@ class Poller(object):
         for s in socks:
             self.poller.register(s.get_connection(), zmq.POLLIN)
 
-    def poll(self):
+    def poll(self, timeout):
 
-        sockets = self.poller.poll()
+        if timeout != None:
+            timeout *= 1000
+
+        sockets = self.poller.poll(timeout)
 
         return list(map(lambda t: (Channel(t[0]), t[1]), sockets))
 

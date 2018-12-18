@@ -22,7 +22,7 @@ def run(country, aid, antennas):
                "--country={}".format(country),
                "--nodes={}".format(antennas),
                "--aid={}".format(aid)])
-    pids.append(p.pid)
+    pids.append((p.pid, aid))
 
     return pids
 
@@ -30,7 +30,7 @@ def store(pids):
 
     with open("pids.store", "w+") as f:
         for pid in pids:
-            f.write(str(pid) + "\n")
+            f.write(str(pid[0]) + ":" + str(pid[1]) + "\n")
 
 def main(country, aid, antennas):
 

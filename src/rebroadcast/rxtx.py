@@ -5,6 +5,7 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
 from middleware.managers import LeaderElection
 from rebroadcast.failure import Detector
+from rebroadcast.heartbeat import HeartbeatSender
 from rebroadcast.states import Leader, Normal
 import rebroadcast.messages as m
 
@@ -25,8 +26,7 @@ class Anthena(object):
         self.handlers = {
             m.ALIVE: self._react_on_alive,
             m.FAIL: self._react_on_fail,
-            m.IS_LEADER: self._react_on_leader_question,
-            m.IS_ALIVE: self._react_on_alive_question
+            m.IS_LEADER: self._react_on_leader_question
         }
 
     def _lesser(self):
@@ -71,13 +71,6 @@ class Anthena(object):
 
         self.connection.send({"mtype": mtype, "node": self.aid}, [nid])
 
-    def _react_on_alive_question(self, nid):
-
-        print("node: {} recv IS_ALIVE from {}".format(self.aid, nid))
-
-        self.connection.send({"mtype": m.REPLY_ALIVE, "node": self.aid},
-                                [nid])
-
     def _recovery(self):
 
         # Notifies nodes with smaller priority that its alive
@@ -115,6 +108,9 @@ class Anthena(object):
         d = Detector(self.country, self.aid, self.config)
         d.start()
 
+        hb = HeartbeatSender(self.country, self.aid, self.config)
+        hb.start()
+
         self._recovery()
 
         try:
@@ -122,6 +118,7 @@ class Anthena(object):
                 self._loop()
         except KeyboardInterrupt:
             d.join()
+            hb.join()
 
         print("Leader module down")
 
