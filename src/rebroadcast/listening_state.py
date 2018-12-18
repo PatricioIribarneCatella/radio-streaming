@@ -12,5 +12,5 @@ class ListeningState(object):
     
     def remove(self, freq):
         if self.listening_freqs[freq] > 0:
-            self.listening_freqs.remove([freq])
+            self.listening_freqs.subtract([freq])
         return self.listening_freqs[freq] == 0

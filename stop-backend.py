@@ -17,7 +17,10 @@ def stop(file):
     with open(file, "r") as f:
         for line in f.readlines():
             _, pid = line.split(" ")
-            kill(int(pid), signal.SIGTERM)
+            try:
+                kill(int(pid), signal.SIGTERM)  
+            except Exception:
+                pass
 
 def main(config):
     stop(config)

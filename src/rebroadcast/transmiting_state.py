@@ -6,10 +6,10 @@ class TransmitingState(object):
     def __init__(self):
         self.active_freqs = dict()
 
-    def add(self, freq, transmiter_id):
+    def add(self, freq):
         if freq in self.active_freqs:
             raise InUseFreq()
-        self.active_freqs[freq] = transmiter_id
+        self.active_freqs[freq] = True
     
     def remove(self, freq):
         try:
