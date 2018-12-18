@@ -1,8 +1,6 @@
 import sys
 from os import path
 
-import zmq
-
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
 import middleware.constants as cons
@@ -37,8 +35,6 @@ class LeaderElection(object):
 
     def send(self, message, receivers):
 
-        print(receivers)
-
         interface = None
 
         for rid in receivers:
@@ -54,7 +50,7 @@ class LeaderElection(object):
         for s, poll_type in socks:
             if poll_type == cons.POLLIN:
                 msg, nid = s.recv()
-                print("node: {} - recv msg: {}, nid: {}".format(self.aid, msg, nid))
+                #print("node: {} - recv msg: {}, nid: {}".format(self.aid, msg, nid))
                 yield msg, nid
 
 

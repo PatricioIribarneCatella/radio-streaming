@@ -1,5 +1,6 @@
 import sys
 import time
+import signal
 from os import path
 from multiprocessing import Process
 
@@ -16,8 +17,12 @@ class HeartbeatSender(Process):
         self.aid = nodeid
         self.country = country
         self.config = config
+        self.quit = False
 
         super(HeartbeatSender, self).__init__()
+
+    def _sig_handler(self, signum, frame):
+        self.quit = True
 
     def _initialize(self):
 
@@ -26,9 +31,11 @@ class HeartbeatSender(Process):
 
     def run(self):
 
+        signal.signal(signal.SIGINT, self._sig_handler)
+
         self._initialize()
 
-        while True:
+        while not self.quit:
 
             self.heartbeat.send({"mtype": m.I_AM_ALIVE, "node": self.aid})
 

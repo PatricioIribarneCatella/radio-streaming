@@ -1,13 +1,15 @@
+import os
 import sys
+import signal
 from os import path
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
+import rebroadcast.messages as m
 from middleware.managers import LeaderElection
 from rebroadcast.failure import Detector
 from rebroadcast.heartbeat import HeartbeatSender
 from rebroadcast.states import Leader, Normal
-import rebroadcast.messages as m
 
 class Anthena(object):
 
@@ -17,7 +19,8 @@ class Anthena(object):
         self.nodes = nodes
         self.config = config
         self.aid = aid
-        
+        self.quit = False
+
         self.connection = LeaderElection(self.country,
                                          self.nodes,
                                          self.aid,
@@ -28,6 +31,9 @@ class Anthena(object):
             m.FAIL: self._react_on_fail,
             m.IS_LEADER: self._react_on_leader_question
         }
+
+    def _sig_handler(self, signum, frame):
+        self.quit = True
 
     def _lesser(self):
 
@@ -43,7 +49,7 @@ class Anthena(object):
             
             if self.next == None:
                 self.state = Normal()
-                print("node:{} is normal".format(self.aid))
+                print("node: {} is NORMAL".format(self.aid))
 
             self.next = nid
 
@@ -54,18 +60,20 @@ class Anthena(object):
         nid += 1
 
         if nid > self.nodes:
-            print("node:{} is leader".format(self.aid))
             # This node is the leader
             self.state = Leader()
             self.connection.monitor({"mtype": m.CLEAR_MONITOR, "node": 0})
             self.next = None
+            print("node: {} is LEADER".format(self.aid))
         else:
-            print("node:{} continue being normal".format(self.aid))
             # Starts monitoring next node
             self.connection.monitor({"mtype": m.START_MONITOR, "node": nid})
             self.next = nid
+            print("node: {} continue being NORMAL".format(self.aid))
 
     def _react_on_leader_question(self, nid):
+
+        print("node: {} recv LEADER? from {}".format(self.aid, nid))
 
         mtype = m.LEADER if self.state.leader() else m.NOT_LEADER
 
@@ -80,17 +88,17 @@ class Anthena(object):
         nextid = self.aid + 1
 
         if nextid > self.nodes:
-            print("node:{} is leader".format(self.aid))
             # This node is the leader
             self.state = Leader()
             self.connection.monitor({"mtype": m.CLEAR_MONITOR, "node": 0})
             self.next = None
+            print("node: {} is LEADER".format(self.aid))
         else:
-            print("node:{} is normal".format(self.aid))
             # Starts monitoring the next node
             self.connection.monitor({"mtype": m.START_MONITOR, "node": nextid})
             self.next = nextid
             self.state = Normal()
+            print("node: {} is NORMAL".format(self.aid))
 
     def _loop(self):
 
@@ -111,14 +119,19 @@ class Anthena(object):
         hb = HeartbeatSender(self.country, self.aid, self.config)
         hb.start()
 
+        # Set signal handler
+        signal.signal(signal.SIGINT, self._sig_handler)
+
         self._recovery()
 
-        try:
-            while True:
-                self._loop()
-        except KeyboardInterrupt:
-            d.join()
-            hb.join()
+        while not self.quit:
+            self._loop()
+
+        os.kill(d.pid, signal.SIGINT)
+        os.kill(hb.pid, signal.SIGINT)
+
+        d.join()
+        hb.join()
 
         print("Leader module down")
 

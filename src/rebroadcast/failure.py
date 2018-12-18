@@ -1,5 +1,6 @@
 import sys
 import time
+import signal
 from os import path
 from multiprocessing import Process
 
@@ -16,8 +17,12 @@ class Detector(Process):
         self.aid = nodeid
         self.country = country
         self.config = config
+        self.quit = False
 
         super(Detector, self).__init__()
+
+    def _sig_handler(self, signum, frame):
+        self.quit = True
 
     def _initialize(self):
 
@@ -46,22 +51,20 @@ class Detector(Process):
         while mtype == m.CLEAR_MONITOR:
             mtype, nid = self.monitor.recv()
             print("node: {}, mtype: {}, nid: {}".format(self.aid, mtype, nid))
-        
-        print("hola")
-        
+
         if not first_time:
             self.next.disconnect(self.config["anthena"][self.country][str(self.monitor_node)]["alive"]["connect"])
         
         self.monitor_node = nid
         self.next.connect(self.config["anthena"][self.country][str(nid)]["alive"]["connect"])
-        
-        print("hola2")
 
     def _start_monitor(self):
 
         self._monitor_node(True)
 
     def run(self):
+
+        signal.signal(signal.SIGINT, self._sig_handler)
 
         # Initialize detector´s connections
         self._initialize()
@@ -71,7 +74,7 @@ class Detector(Process):
 
         self._start_monitor()
         
-        while True:
+        while not self.quit:
 
             socks = self.poller.poll(cons.TIMEOUT)
 
@@ -93,10 +96,9 @@ class Detector(Process):
                 if msg == m.I_AM_ALIVE:
                     print("failure detector node: {} - recv I_AM_ALIVE from: {}".format(self.aid, nid))
 
-            print("hola3")
-
-        self.node.close()
+        self.fail.close()
         self.next.close()
+        self.monitor.close()
 
         print("Failure detector from {} and id:{} down".format(
                 self.country, self.aid))
