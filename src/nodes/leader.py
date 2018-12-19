@@ -5,21 +5,21 @@ from os import path
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
-from rebroadcast.rxtx import Antenna
+from rebroadcast.leader import LeaderCoordinator
 
-def main(country, aid, config):
+def main(country, nodes, aid, config):
 
     with open(config) as f:
         config_data = json.load(f)
 
-    a = Antenna(country, aid, config_data)
+    l = LeaderCoordinator(country, nodes, aid, config_data)
 
-    a.run()
+    l.run()
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
-                        description='Radio Streaming RXTX Antenna',
+                        description='Radio Streaming Leader tester',
                         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument(
@@ -27,6 +27,12 @@ if __name__ == "__main__":
             help="Country of the form: <ISO-COUNTRY>"
     )
 
+    parser.add_argument(
+            "--nodes",
+            type=int,
+            help="Number of replica nodes",
+            default=2
+    )
 
     parser.add_argument(
             "--config",
@@ -36,11 +42,11 @@ if __name__ == "__main__":
     parser.add_argument(
             "--aid",
             type=int,
-            help="Antenna id"
+            help="Anthena id"
     )
 
     args = parser.parse_args()
 
-    main(args.country, args.aid, args.config)
+    main(args.country, args.nodes, args.aid, args.config)
 
 

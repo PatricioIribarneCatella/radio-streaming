@@ -26,7 +26,7 @@ def run(config):
             p = Popen([PYTHON,
                    NODES_DIR + "anthena.py",
                    "--country={}".format(country),
-                   "--node={}".format(node_number),
+                   "--aid={}".format(node_number),
                    "--config={}".format(config)])
             pids.append("Anthena-{}-{} {}".format(country, node_number, p.pid))
 

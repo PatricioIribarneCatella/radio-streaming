@@ -20,7 +20,8 @@ class Retransmitter(Process):
         self.outgoing_router = random.choice(config['routers_endpoints'])['input']
         self.transmitting_state = TransmitingState()
         self.listening_state = ListeningState()
-        
+        super(Retransmitter, self).__init__()
+
 
     def _start_connections(self):
         self.context = zmq.Context()

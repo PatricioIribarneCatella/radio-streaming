@@ -1,33 +1,32 @@
+import os
 import sys
 from os import path
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
-from transmission import Retransmitter
-from leader import LeaderElection, LeaderTester
-from listener import TestListener
+from rebroadcast.leader import LeaderCoordinator
+from rebroadcast.transmission import Retransmitter
 
-class Anthena(object):
+class Antenna(object):
 
-    def __init__(self, country, nodes, config):
+    def __init__(self, country, aid, config):
 
         self.country = country
-        self.nodes = nodes
         self.config = config
+        self.aid = aid
+        super(Antenna, self).__init__()
 
     def run(self):
 
-        print("Anthena running")
+        print("Antenna running. Country: {}, id: {}".format(
+                    self.country, self.aid))
 
-        r = Retransmitter(self.config)
-        r.start()
+        rt = Retransmitter(self.country, self.aid, self.config)
+        rt.start()
 
-        le = LeaderElection(self.config)
-        le.start()
+        lc = LeaderCoordinator(self.country, self.aid, self.config)
+        lc.start()
 
-        lt = LeaderTester(self.config)
-        lt.start()
+        print("Antenna module down")
 
-        l = TestListener(self.config)
-        l.start()
 
