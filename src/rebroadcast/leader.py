@@ -22,10 +22,6 @@ class LeaderCoordinator(Process):
         self.aid = aid
         self.quit = False
 
-        self.connection = LeaderElection(self.country,
-                                         self.aid,
-                                         self.config)
-
         self.handlers = {
             m.ALIVE: self._react_on_alive,
             m.FAIL: self._react_on_fail,
@@ -33,6 +29,12 @@ class LeaderCoordinator(Process):
         }
 
         super(LeaderCoordinator, self).__init__()
+
+    def _initialize(self):
+        
+        self.connection = LeaderElection(self.country,
+                                         self.aid,
+                                         self.config)
 
     def _sig_handler(self, signum, frame):
         self.quit = True
@@ -112,6 +114,8 @@ class LeaderCoordinator(Process):
             handler(nid)
 
     def run(self):
+    
+        self._initialize()
 
         print("Leader module running. Country: {}, id: {}".format(
                     self.country, self.aid))
