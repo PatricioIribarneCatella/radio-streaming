@@ -1,35 +1,44 @@
 #!/usr/bin/python3
 
-import argparse
-from subprocess import Popen
-from os import path
 import json
+import argparse
+from os import path
+from subprocess import Popen
+
 #
-# Runs the anthena (and its replicas) that
-# belongs to a certain country 
+# Runs the anthena (and its replicas)
+# for a given topology and scenario
+#
+# Example: AR and BR with 3 nodes each,
+#   and 3 international routers
 #
 
-PYTHON = "python"
+PYTHON = "python3"
 NODES_DIR = path.join(path.dirname(__file__), "src/nodes/")
 
 def run(config):
+
     pids = []
 
     with open(config) as f:
         config_data = json.load(f)
 
+    # Antennas
     total_retransmitters = config_data['retransmitter_endpoints']
 
     for country in total_retransmitters:
+        
         country_retransmitters = total_retransmitters[country]
+        
         for node_number in range(len(country_retransmitters)):
             p = Popen([PYTHON,
                    NODES_DIR + "anthena.py",
                    "--country={}".format(country),
                    "--aid={}".format(node_number),
                    "--config={}".format(config)])
-            pids.append("Anthena-{}-{} {}".format(country, node_number, p.pid))
+            pids.append(("antenna-{}-{}".format(country, node_number), p.pid))
 
+    # Routers
     routers = config_data['routers_endpoints']
 
     for router_number in range(len(routers)):
@@ -37,15 +46,15 @@ def run(config):
                    NODES_DIR + "router.py",
                    "--node={}".format(router_number),
                    "--config={}".format(config)])
-        pids.append("Router-{} {}".format(router_number, p.pid))
+        pids.append(("router-{}".format(router_number), p.pid))
 
     return pids
 
 def store(pids):
 
-    with open("pids.store", "w+") as f:
-        for pid in pids:
-            f.write(str(pid) + "\n")
+    for pid in pids:
+        with open("pids-{}.store".format(pid[0]), "a") as f:
+            f.write(str(pid[1]) + "\n")
 
 def main(config):
 
@@ -61,7 +70,7 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--config",
-        help="The topology configuration file. Must be in json format",
+        help="The topology configuration file. Must be in JSON format",
         default="config.json"
     )
 

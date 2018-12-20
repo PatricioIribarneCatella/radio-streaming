@@ -14,6 +14,7 @@ class Antenna(object):
         self.country = country
         self.config = config
         self.aid = aid
+        
         super(Antenna, self).__init__()
 
     def run(self):
@@ -27,6 +28,12 @@ class Antenna(object):
         lc = LeaderCoordinator(self.country, self.aid, self.config)
         lc.start()
 
-        print("Antenna module down")
+        # Save pids to stop them after
+        with open("pids-antenna-{}-{}.store".format(self.country, self.aid), "a") as f:
+            f.write(str(rt.pid) + "\n")
+            f.write(str(lc.pid) + "\n")
+
+        rt.join()
+        lc.join()
 
 

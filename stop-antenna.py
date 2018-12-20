@@ -12,7 +12,7 @@ from os import kill, remove
 
 def main(country, aid):
 
-    file_path = "pids-{}-{}.store".format(country, aid)
+    file_path = "pids-antenna-{}-{}.store".format(country, aid)
 
     with open(file_path) as f:
         
@@ -20,10 +20,10 @@ def main(country, aid):
 
         for pid in lines:
             try:
-                    
                 kill(int(pid), signal.SIGKILL)
             except Exception:
                 pass
+
     # Delete file so when the node
     # starts again it could have its
     # file clean

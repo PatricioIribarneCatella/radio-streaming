@@ -89,9 +89,10 @@ class Detector(Process):
                 
                 if msg == m.START_MONITOR:
                     print("failure detector node: {} - recv START_MONITOR from: {}".format(self.aid, nid))
-                    self.next.disconnect(self.config["retransmitter_endpoints"][self.country][int(self.monitor_node)]["alive"]["connect"])
+                    interface = self.config["retransmitter_endpoints"][self.country][int(self.monitor_node)]["alive"]["connect"]
+                    self.next.disconnect(interface)
                     self.monitor_node = nid
-                    self.next.connect(self.config["retransmitter_endpoints"][self.country][int(self.monitor_node)]["alive"]["connect"])
+                    self.next.connect(interface)
 
                 if msg == m.I_AM_ALIVE:
                     print("failure detector node: {} - recv I_AM_ALIVE from: {}".format(self.aid, nid))

@@ -2,6 +2,7 @@ import os
 import sys
 import signal
 from os import path
+from multiprocessing import Process
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
@@ -10,7 +11,6 @@ from middleware.managers import LeaderElection
 from rebroadcast.failure import Detector
 from rebroadcast.heartbeat import HeartbeatSender
 from rebroadcast.states import Leader, Normal
-from multiprocessing import Process
 
 class LeaderCoordinator(Process):
 
@@ -23,7 +23,6 @@ class LeaderCoordinator(Process):
         self.quit = False
 
         self.connection = LeaderElection(self.country,
-                                         self.nodes,
                                          self.aid,
                                          self.config)
 
@@ -32,6 +31,7 @@ class LeaderCoordinator(Process):
             m.FAIL: self._react_on_fail,
             m.IS_LEADER: self._react_on_leader_question
         }
+
         super(LeaderCoordinator, self).__init__()
 
     def _sig_handler(self, signum, frame):
@@ -39,7 +39,7 @@ class LeaderCoordinator(Process):
 
     def _lesser(self):
 
-        return [i for i in range(1, self.aid)]
+        return [i for i in range(self.aid)]
 
     def _react_on_alive(self, nid):
 
@@ -61,7 +61,7 @@ class LeaderCoordinator(Process):
 
         nid += 1
 
-        if nid > self.nodes:
+        if nid == self.nodes:
             # This node is the leader
             self.state = Leader()
             self.connection.monitor({"mtype": m.CLEAR_MONITOR, "node": 0})
@@ -79,17 +79,18 @@ class LeaderCoordinator(Process):
 
         mtype = m.LEADER if self.state.leader() else m.NOT_LEADER
 
-        self.connection.send({"mtype": mtype, "node": self.aid}, [nid])
+        self.connection.send({"mtype": mtype, "node": self.aid},
+                             [nid], "station")
 
     def _recovery(self):
 
         # Notifies nodes with smaller priority that its alive
         self.connection.send({"mtype": m.ALIVE, "node": self.aid},
-                                self._lesser())
+                                self._lesser(), "retransmitter_endpoints")
 
         nextid = self.aid + 1
 
-        if nextid > self.nodes:
+        if nextid == self.nodes:
             # This node is the leader
             self.state = Leader()
             self.connection.monitor({"mtype": m.CLEAR_MONITOR, "node": 0})
@@ -122,7 +123,7 @@ class LeaderCoordinator(Process):
         hb.start()
 
         # Save pids to stop them after
-        with open("pids-{}-{}.store".format(self.country, self.aid), "a") as f:
+        with open("pids-antenna-{}-{}.store".format(self.country, self.aid), "a") as f:
             f.write(str(d.pid) + "\n")
             f.write(str(hb.pid) + "\n")
 

@@ -1,10 +1,11 @@
-from multiprocessing import Process
+import re
 import zmq
+import random
 from time import sleep
+from multiprocessing import Process
+
 from .transmiting_state import TransmitingState, InUseFreq
 from .listening_state import ListeningState
-import re
-import random
 
 class Retransmitter(Process):
 
@@ -131,6 +132,8 @@ class Retransmitter(Process):
         self.context.term()
 
     def run(self):
+        print("Transmitter module running - country: {} id: {}".format(self.country, self.node_number))
         self._start_connections()
         self._retransmit()
         self._close()
+
