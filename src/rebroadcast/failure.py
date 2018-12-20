@@ -43,14 +43,16 @@ class Detector(Process):
         # Receives id of the node
         # to be monitored
         mtype, nid = self.monitor.recv()
-        print("node: {} recv mtype: {}, nid: {}".format(self.aid, mtype, nid))
+        print("country: {}, node: {} - recv (mtype: {}, nid: {})".format(
+                self.country, self.aid, mtype, nid))
 
         # If the message type is "CLEAR"
         # it means the node is the 'Leader'
         # and it does not need to monitor any node
         while mtype == m.CLEAR_MONITOR:
             mtype, nid = self.monitor.recv()
-            print("node: {}, mtype: {}, nid: {}".format(self.aid, mtype, nid))
+            print("country: {}, node: {} - recv (mtype: {}, nid: {})".format(
+                    self.country, self.aid, mtype, nid))
 
         if not first_time:
             self.next.disconnect(self.config["retransmitter_endpoints"][self.country][int(self.monitor_node)]["alive"]["connect"])
@@ -88,14 +90,16 @@ class Detector(Process):
                 msg, nid = s.recv()
                 
                 if msg == m.START_MONITOR:
-                    print("failure detector node: {} - recv START_MONITOR from: {}".format(self.aid, nid))
+                    print("failure detector - country: {}, node: {} - recv START_MONITOR from: {}".format(
+                            self.country, self.aid, nid))
                     interface = self.config["retransmitter_endpoints"][self.country][int(self.monitor_node)]["alive"]["connect"]
                     self.next.disconnect(interface)
                     self.monitor_node = nid
                     self.next.connect(interface)
 
                 if msg == m.I_AM_ALIVE:
-                    print("failure detector node: {} - recv I_AM_ALIVE from: {}".format(self.aid, nid))
+                    print("failure detector - country: {}, node: {} - recv I_AM_ALIVE from: {}".format(
+                            self.country, self.aid, nid))
 
         self.fail.close()
         self.next.close()

@@ -45,7 +45,8 @@ class LeaderCoordinator(Process):
 
     def _react_on_alive(self, nid):
 
-        print("node: {} recv ALIVE from {}".format(self.aid, nid))
+        print("country: {}, node: {} - recv ALIVE from {}".format(
+            self.country, self.aid, nid))
 
         if (self.next == None) or (self.next > nid):
             
@@ -59,7 +60,8 @@ class LeaderCoordinator(Process):
 
     def _react_on_fail(self, nid):
 
-        print("node: {} recv FAIL from {}".format(self.aid, nid))
+        print("country: {}, node: {} - recv FAIL from {}".format(
+            self.country, self.aid, nid))
 
         nid += 1
 
@@ -68,16 +70,19 @@ class LeaderCoordinator(Process):
             self.state = Leader()
             self.connection.monitor({"mtype": m.CLEAR_MONITOR, "node": 0})
             self.next = None
-            print("node: {} is LEADER".format(self.aid))
+            print("country: {}, node: {} - is LEADER".format(
+                self.country, self.aid))
         else:
             # Starts monitoring next node
             self.connection.monitor({"mtype": m.START_MONITOR, "node": nid})
             self.next = nid
-            print("node: {} continue being NORMAL".format(self.aid))
+            print("country: {}, node: {} - continue being NORMAL".format(
+                self.country, self.aid))
 
     def _react_on_leader_question(self, nid):
 
-        print("node: {} recv LEADER? from {}".format(self.aid, nid))
+        print("country: {}, node: {} - recv LEADER? from {}".format(
+            self.country, self.aid, nid))
 
         mtype = m.LEADER if self.state.leader() else m.NOT_LEADER
 
@@ -97,13 +102,15 @@ class LeaderCoordinator(Process):
             self.state = Leader()
             self.connection.monitor({"mtype": m.CLEAR_MONITOR, "node": 0})
             self.next = None
-            print("node: {} is LEADER".format(self.aid))
+            print("country: {}, node: {} - is LEADER".format(
+                self.country, self.aid))
         else:
             # Starts monitoring the next node
             self.connection.monitor({"mtype": m.START_MONITOR, "node": nextid})
             self.next = nextid
             self.state = Normal()
-            print("node: {} is NORMAL".format(self.aid))
+            print("country: {}, node: {} - is NORMAL".format(
+                self.country, self.aid))
 
     def _loop(self):
 
