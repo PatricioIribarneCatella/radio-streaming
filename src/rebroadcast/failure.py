@@ -95,6 +95,7 @@ class Detector(Process):
                     interface = self.config["retransmitter_endpoints"][self.country][int(self.monitor_node)]["alive"]["connect"]
                     self.next.disconnect(interface)
                     self.monitor_node = nid
+                    interface = self.config["retransmitter_endpoints"][self.country][int(self.monitor_node)]["alive"]["connect"]
                     self.next.connect(interface)
 
                 if msg == m.I_AM_ALIVE:
