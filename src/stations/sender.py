@@ -1,32 +1,30 @@
-import re
-import zmq
-import random
 from time import sleep
-from scipy.io import wavfile
-from multiprocessing import Process
 
-class InvalidFrequency(Exception):
-    pass
+sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
-class Sender(Process):
+from audio.reader import AudioReader
+from middleware.managers import SenderStation
+from stations.transmitter import Transmitter
+from stations.listeners import SenderListener
 
-    def __init__(self, frequency_code, input_file, config):
+class Sender(object):
 
-        match = re.match(r'^(\w{2,3})-\d{2,3}\.\d$', frequency_code)
-        
-        if match is None:
-            raise InvalidFrequency
+    def __init__(self, frequency_code, country, input_file, config):
 
-        self.country = match.group(1)
+        self.country = country
         self.input_file = input_file
         self.frequency_code = frequency_code
         
+        self.audio = AudioReader(self.input_file)
+
         self.output_endpoint = random.choice(config['retransmitter_endpoints'][self.country])['input']
         self.admin_endpoint = random.choice(config['retransmitter_endpoints'][self.country])['admin']
 
     def _start_connections(self):
-        
-        self.bitrate, self.data = wavfile.read(self.input_file)
+
+        self.connection = SenderStation(self.country,
+                                        self.frequency_code,
+                                        self.config)
 
         self.context = zmq.Context()
         self.output_socket = self.context.socket(zmq.PUSH)
@@ -43,16 +41,15 @@ class Sender(Process):
     def _transmit(self):
         
         try:
-            data_length = len(self.data)
-            window_size = self.bitrate
-            
             while True:
-                offset = 0
-                while data_length > offset + window_size:
-                    self.output_socket.send_multipart(\
-                        [self.frequency_code.encode(), self.data[offset : offset + window_size]])
-                    offset += window_size
+
+                for chunk in self.audio.chunks():
+
+                    self.connection.send(chunk)
                     sleep(0.99)
+
+                self.audio.reset()
+
         except KeyboardInterrupt:
             pass
 

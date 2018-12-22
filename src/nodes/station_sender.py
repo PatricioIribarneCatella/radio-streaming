@@ -1,3 +1,4 @@
+import re
 import sys
 import json
 import argparse
@@ -9,10 +10,18 @@ from stations.sender import Sender
 
 def main(frequency, input_file, config):
 
+    match = re.match(r'^(\w{2,3})-\d{2,3}\.\d$', frequency)
+
+    if match is None:
+        print("Bad frequency format given. Must be <ISO-COUNTRY>-<FREQ>")
+        return
+
+    country = match.group(1)
+
     with open(config) as f:
         config_data = json.load(f)
 
-    s = Sender(frequency, input_file, config_data)
+    s = Sender(frequency, country, input_file, config_data)
 
     s.run()
 
