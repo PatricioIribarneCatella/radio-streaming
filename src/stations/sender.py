@@ -5,6 +5,9 @@ from time import sleep
 from scipy.io import wavfile
 from multiprocessing import Process
 
+class InvalidFrequency(Exception):
+    pass
+
 class Sender(Process):
 
     def __init__(self, frequency_code, input_file, config):

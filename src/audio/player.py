@@ -4,12 +4,11 @@ class AudioPlayer(object):
 
     def __init__(self, bitrate=16000):
 
-        self.PyAudio = pyaudio.PyAudio
         self.bitrate = bitrate 
-        self.p = self.PyAudio()
+        self.p = pyaudio.PyAudio()
         self.stream = self.p.open(format = self.p.get_format_from_width(2),
                             channels = 2,
-                            rate = bitrate,
+                            rate = self.bitrate,
                             output = True)
 
     def play(self, wavedata):
@@ -19,3 +18,5 @@ class AudioPlayer(object):
         self.stream.stop_stream()
         self.stream.close()
         self.p.terminate()
+
+

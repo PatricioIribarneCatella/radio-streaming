@@ -1,8 +1,8 @@
 import re
 import zmq 
 import random
-
 from multiprocessing import Process
+
 from audio.player import AudioPlayer
 
 class InvalidFrequency(Exception):
