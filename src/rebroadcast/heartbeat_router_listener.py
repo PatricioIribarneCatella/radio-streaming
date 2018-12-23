@@ -9,7 +9,7 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
 import rebroadcast.messages as m
 import middleware.constants as cons
-from middleware.channels import PublishInterNode
+from middleware.channels import TopicInterNode, Poller
 
 class HeartbeatListener(Thread):
     def __init__(self, endpoints, feedback_timestamps):
@@ -23,23 +23,22 @@ class HeartbeatListener(Thread):
 
     def _start_connections(self):
         self.context = zmq.Context()
-        self.poller = zmq.Poller()
-        self.heartbeat_sockets = []
+        heartbeat_sockets = []
         for heartbeat_endpoint in self.endpoints:
-            heartbeat_socket = self.context.socket(zmq.SUB)
-            heartbeat_socket.connect('tcp://{}:{}'.format(heartbeat_endpoint['ip'], heartbeat_endpoint['port']))
-            heartbeat_socket.setsockopt_string(zmq.SUBSCRIBE, "")
-            self.heartbeat_sockets.append(heartbeat_socket)
-            self.poller.register(heartbeat_socket, zmq.POLLIN)
-
+            heartbeat_socket = TopicInterNode([""])
+            heartbeat_socket.connect(heartbeat_endpoint)
+            heartbeat_sockets.append(heartbeat_socket)
+        
+        self.poller = Poller(heartbeat_sockets)
     
     def run(self):
         self._start_connections()
         while not self.quit.is_set():
-            for socket_with_data, _ in self.poller.poll():
-                message = socket_with_data.recv_json()
-                if message['mtype'] == m.I_AM_ALIVE:
-                    self.feedback_timestamps[message['node']] = datetime.now()
+            for socket, _ in self.poller.poll():
+                message_type, node_number = socket.recv()
+
+                if message_type == m.I_AM_ALIVE:
+                    self.feedback_timestamps[node_number] = datetime.now()
 
     def _close(self):
         self.context.close()

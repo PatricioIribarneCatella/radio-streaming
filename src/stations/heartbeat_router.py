@@ -37,7 +37,6 @@ class HeartbeatSender(Thread):
         self._initialize()
 
         while not self.shutdown_flag.is_set():
-            print('Hello')
 
             self.heartbeat.send({"mtype": m.I_AM_ALIVE, "node": self.nodeid})
 

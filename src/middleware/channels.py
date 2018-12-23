@@ -117,7 +117,7 @@ class Poller(object):
         for s in socks:
             self.poller.register(s.get_connection(), zmq.POLLIN)
 
-    def poll(self, timeout):
+    def poll(self, timeout=None):
 
         if timeout != None:
             timeout *= 1000
