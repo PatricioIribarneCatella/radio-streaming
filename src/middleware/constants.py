@@ -17,3 +17,4 @@ PUSH = zmq.PUSH
 PUB = zmq.PUB
 SUB = zmq.SUB
 
+ROUTER_RECONNECT_TRIAL = 0.5

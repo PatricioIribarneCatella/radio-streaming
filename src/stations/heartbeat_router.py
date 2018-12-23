@@ -32,7 +32,6 @@ class HeartbeatSender(Thread):
         self.heartbeat.bind(self.output_endpoint)
 
     def run(self):
- 
 
         self._initialize()
 

@@ -80,19 +80,21 @@ class Retransmitter(Process):
             return self.outgoing_router_socket[self.current_outgoing_router]
         
         self.current_outgoing_router = None
-        outgoing_routers = list(enumerate(self.router_last_timestamp_alive))
-        shuffle(outgoing_routers)
-        print ('changing router')
 
-        for i, timestamp in outgoing_routers:
-            if now - timestamp < timedelta(seconds=c.TIMEOUT):
-                self.current_outgoing_router = i
-                break
-        if self.current_outgoing_router is None:
-            raise Exception('No router available')
+        while self.current_outgoing_router is None:
+            now = datetime.now()
+            outgoing_routers = list(enumerate(self.router_last_timestamp_alive))
+            shuffle(outgoing_routers)
+            print ('changing router')
+            for i, timestamp in outgoing_routers:
+                if now - timestamp < timedelta(seconds=c.TIMEOUT):
+                    self.current_outgoing_router = i
+                    break
+            if self.current_outgoing_router == None:
+                sleep (c.ROUTER_RECONNECT_TRIAL)
+
         print ('router selected {}'.format(self.current_outgoing_router))
         return self.outgoing_router_socket[self.current_outgoing_router]       
-
 
     def _transmit_message(self, frequency, message):
         
