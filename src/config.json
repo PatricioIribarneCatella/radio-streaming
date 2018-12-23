@@ -1,0 +1,85 @@
+{
+	"anthena": {
+		"ARG": {
+			"1": {
+				"connect": {
+					"ip": "localhost",
+					"port": 5001
+				},
+				"bind": {
+					"ip": "0.0.0.0",
+					"port": 5001
+				},
+				"alive": {
+					"bind": {
+						"ip": "0.0.0.0",
+						"port": 6001
+					},
+					"connect": {
+						"ip": "localhost",
+						"port": 6001
+					}
+				},
+				"query-leader": {
+					"bind": {
+						"ip": "0.0.0.0",
+						"port": 7001
+					}
+				}
+			},
+			"2": {
+				"connect": {
+					"ip": "localhost",
+					"port": 5002
+				},
+				"bind": {
+					"ip": "0.0.0.0",
+					"port": 5002
+				},
+				"alive": {
+					"bind": {
+						"ip": "0.0.0.0",
+						"port": 6002
+					},
+					"connect": {
+						"ip": "localhost",
+						"port": 6002
+					}
+				},
+				"query-leader": {
+					"bind": {
+						"ip": "0.0.0.0",
+						"port": 7002
+					}
+				}
+			},
+			"3": {
+				"connect": {
+					"ip": "localhost",
+					"port": 5003
+				},
+				"bind": {
+					"ip": "0.0.0.0",
+					"port": 5003
+				},
+				"alive": {
+					"bind": {
+						"ip": "0.0.0.0",
+						"port": 6003
+					},
+					"connect": {
+						"ip": "localhost",
+						"port": 6003
+					}
+				},
+				"query-leader": {
+					"bind": {
+						"ip": "0.0.0.0",
+						"port": 7003
+					}
+				}
+			}
+		}
+	}
+}
+

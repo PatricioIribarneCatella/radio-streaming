@@ -2,6 +2,7 @@ import zmq
 from multiprocessing import Process
 from hashlib import md5
 import json
+from .heartbeat_router import HeartbeatSender
 
 END_TOKEN = 'END'
 
@@ -9,7 +10,9 @@ class Router(Process):
     def __init__(self, node_number, config):
         self.input_endpoint = config['routers_endpoints'][node_number]['input']
         self.output_endpoint = config['routers_endpoints'][node_number]['output']
+        self.heartbeat_endpoint = config['routers_endpoints'][node_number]['heartbeat']['bind']
         self.number_of_threads = int(config['routers_endpoints'][node_number].get('number_of_threads', 1))
+        self.node_number = node_number
         super(Router, self).__init__()
 
     def _start_connections(self):
@@ -22,6 +25,9 @@ class Router(Process):
         # Socket facing services
         self.output_socket = self.context.socket(zmq.PUB)
         self.output_socket.bind("tcp://{}".format(self.output_endpoint))
+        
+        self.heartbeat_sender = HeartbeatSender(self.node_number, self.heartbeat_endpoint)
+        self.heartbeat_sender.start()
 
     def _get_message(self):
         print('listening in  {}'.format(self.input_endpoint))
@@ -29,6 +35,14 @@ class Router(Process):
     
     def _forward_message(self, topic, message):
         self.output_socket.send_multipart([topic, message])
+
+
+    def _close(self):
+        self.heartbeat_sender.shutdown()
+        self.heartbeat_sender.join()
+        self.input_socket.close()
+        self.output_socket.close()
+        self.context.term()
 
     def run(self):
         try:
@@ -40,7 +54,4 @@ class Router(Process):
             print (e)
             print ("bringing down zmq device")
         finally:
-
-            self.input_socket.close()
-            self.output_socket.close()
-            self.context.term()
+            self._close()

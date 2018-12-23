@@ -2,11 +2,15 @@ import re
 import zmq
 import random
 from time import sleep
+from datetime import datetime, timedelta
 from multiprocessing import Process
 
 from .transmiting_state import TransmitingState, InUseFreq
 from .listening_state import ListeningState
 
+from .heartbeat_router_listener import HeartbeatListener
+from middleware import constants as c
+from random import shuffle, randint
 class Retransmitter(Process):
 
     def __init__(self, country, node_number, config):
@@ -20,8 +24,13 @@ class Retransmitter(Process):
         
         self.is_leader = node_number == 0
         self.routers_endpoints = list(map(lambda x: x['output'], config['routers_endpoints']))
-        self.outgoing_router = random.choice(config['routers_endpoints'])['input']
-        
+        # self.outgoing_router = random.choice(config['routers_endpoints'])['input']
+        self.possible_outgoing_routers_heartbeat = \
+                list(map(lambda x: x['heartbeat']['connect'], config['routers_endpoints']))
+        self.current_outgoing_router = random.randint(0, len(self.possible_outgoing_routers_heartbeat) - 1)
+        print('Picked router {}'.format(self.current_outgoing_router))
+        self.possible_outgoing_routers_endpoint = map(lambda x: x['input'], config['routers_endpoints'])
+        self.router_last_timestamp_alive = [datetime.now() for i in self.possible_outgoing_routers_heartbeat]
         self.transmitting_state = TransmitingState()
         self.listening_state = ListeningState()
         
@@ -45,8 +54,16 @@ class Retransmitter(Process):
         self.output_socket = self.context.socket(zmq.PUB)
         self.output_socket.bind('tcp://{}'.format(self.output_endpoint))
 
-        self.outgoing_router_socket = self.context.socket(zmq.PUSH)
-        self.outgoing_router_socket.connect('tcp://{}'.format(self.outgoing_router))
+        self.outgoing_router_socket = []
+        for router_endpoint in self.possible_outgoing_routers_endpoint:
+            outgoing_router_socket = self.context.socket(zmq.PUSH)
+            outgoing_router_socket.connect('tcp://{}'.format(router_endpoint))
+            self.outgoing_router_socket.append(outgoing_router_socket)
+
+
+        self.monitor = HeartbeatListener(self.possible_outgoing_routers_heartbeat, self.router_last_timestamp_alive)
+        self.monitor.start()
+
 
         self.admin_socket = self.context.socket(zmq.REP)
         self.admin_socket.bind('tcp://{}'.format(self.admin_endpoint))
@@ -57,16 +74,38 @@ class Retransmitter(Process):
             self.leader_admin_socket = self.context.socket(zmq.REQ)
             self.leader_admin_socket.connect('tcp://{}'.format(self.leader_admin_endpoint))
 
+    def _get_outgoing_socket(self):
+        now = datetime.now()
+        if now - self.router_last_timestamp_alive[self.current_outgoing_router] < timedelta(seconds=c.TIMEOUT):
+            return self.outgoing_router_socket[self.current_outgoing_router]
+        
+        self.current_outgoing_router = None
+        outgoing_routers = list(enumerate(self.router_last_timestamp_alive))
+        shuffle(outgoing_routers)
+        print ('changing router')
+
+        for i, timestamp in outgoing_routers:
+            if now - timestamp < timedelta(seconds=c.TIMEOUT):
+                self.current_outgoing_router = i
+                break
+        if self.current_outgoing_router is None:
+            raise Exception('No router available')
+        print ('router selected {}'.format(self.current_outgoing_router))
+        return self.outgoing_router_socket[self.current_outgoing_router]       
+
+
     def _transmit_message(self, frequency, message):
         
+        outgoing_socket  = self._get_outgoing_socket()
+
         self.output_socket.send_multipart([frequency, message])
         
-        print('sending {} {}'.format(frequency, self.outgoing_router))
+        print('sending {} to {} - from {}-{}'.format(frequency, self.output_socket, self.country, self.node_number))
         
-        if frequency.decode().startswith(self.country + '-'):
-            self.outgoing_router_socket.send_multipart([frequency, message])
+        if frequency.decode().startswith(self.country + '-'): # Dont retransmit to router international freq
+            outgoing_socket.send_multipart([frequency, message])
         
-        print('sent {} {}'.format(frequency, self.outgoing_router))
+            print('sent {} to {} - from {}-{}'.format(frequency, self.current_outgoing_router, self.country, self.node_number))
 
 
     def _start_listening(self, frequency):
@@ -140,12 +179,14 @@ class Retransmitter(Process):
                     self._transmit_message(frequency, message)
 
     def _close(self):
+
+        self.monitor.shutdown()
+        self.monitor.join()
         self.output_socket.close()
         self.input_socket.close()
         self.context.term()
 
     def run(self):
-        
         print("Transmitter module running - country: {} id: {}".format(
             self.country, self.node_number))
         
