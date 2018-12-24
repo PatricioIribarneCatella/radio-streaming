@@ -1,0 +1,222 @@
+{
+    "retransmitter_endpoints": {
+        "AR": [
+            {
+                "output": "127.0.0.1:4000",
+                "input": "127.0.0.1:3000",
+                "admin": "127.0.0.1:2000",
+                "connect": {
+			"ip": "localhost",
+			"port": 5000
+		},
+		"bind": {
+			"ip": "0.0.0.0",
+			"port": 5000
+		},
+		"alive": {
+			"bind": {
+				"ip": "0.0.0.0",
+				"port": 6000
+			},
+			"connect": {
+				"ip": "localhost",
+				"port": 6000
+			}
+		},
+		"query-leader": {
+			"bind": {
+				"ip": "0.0.0.0",
+				"port": 9000
+			}
+		}
+            },
+            {
+                "output": "127.0.0.1:4001",
+                "input": "127.0.0.1:3001",
+                "admin": "127.0.0.1:2001",
+                "connect": {
+			"ip": "localhost",
+			"port": 5001
+		},
+		"bind": {
+			"ip": "0.0.0.0",
+			"port": 5001
+		},
+		"alive": {
+			"bind": {
+				"ip": "0.0.0.0",
+				"port": 6001
+			},
+			"connect": {
+				"ip": "localhost",
+				"port": 6001
+			}
+		},
+		"query-leader": {
+			"bind": {
+				"ip": "0.0.0.0",
+				"port": 9001
+			}
+		}
+            },
+            {
+                "output": "127.0.0.1:4002",
+                "input": "127.0.0.1:3002",
+                "admin": "127.0.0.1:2002",
+                "connect": {
+			"ip": "localhost",
+			"port": 5002
+		},
+		"bind": {
+			"ip": "0.0.0.0",
+			"port": 5002
+		},
+		"alive": {
+			"bind": {
+				"ip": "0.0.0.0",
+				"port": 6002
+			},
+			"connect": {
+				"ip": "localhost",
+				"port": 6002
+			}
+		},
+		"query-leader": {
+			"bind": {
+				"ip": "0.0.0.0",
+				"port": 9002
+			}
+		}
+            }],
+        "BR": [
+            {
+                "output": "127.0.0.1:4010",
+                "input": "127.0.0.1:3010",
+                "admin": "127.0.0.1:2010",
+                "connect": {
+			"ip": "localhost",
+			"port": 5003
+		},
+		"bind": {
+			"ip": "0.0.0.0",
+			"port": 5003
+		},
+		"alive": {
+			"bind": {
+				"ip": "0.0.0.0",
+				"port": 6003
+			},
+			"connect": {
+				"ip": "localhost",
+				"port": 6003
+			}
+		},
+		"query-leader": {
+			"bind": {
+				"ip": "0.0.0.0",
+				"port": 9003
+			}
+		}
+            },
+            {
+                "output": "127.0.0.1:4011",
+                "input": "127.0.0.1:3011",
+                "admin": "127.0.0.1:2011",
+                "connect": {
+			"ip": "localhost",
+			"port": 5004
+		},
+		"bind": {
+			"ip": "0.0.0.0",
+			"port": 5004
+		},
+		"alive": {
+			"bind": {
+				"ip": "0.0.0.0",
+				"port": 6004
+			},
+			"connect": {
+				"ip": "localhost",
+				"port": 6004
+			}
+		},
+		"query-leader": {
+			"bind": {
+				"ip": "0.0.0.0",
+				"port": 9004
+			}
+		}
+            },
+            {
+                "output": "127.0.0.1:4012",
+                "input": "127.0.0.1:3012",
+                "admin": "127.0.0.1:2012",
+                "connect": {
+			"ip": "localhost",
+			"port": 5005
+		},
+		"bind": {
+			"ip": "0.0.0.0",
+			"port": 5005
+		},
+		"alive": {
+			"bind": {
+				"ip": "0.0.0.0",
+				"port": 6005
+			},
+			"connect": {
+				"ip": "localhost",
+				"port": 6005
+			}
+		},
+		"query-leader": {
+			"bind": {
+				"ip": "0.0.0.0",
+				"port": 9005
+			}
+		}
+            }]
+    },
+    "routers_endpoints": [
+        {
+            "output": "127.0.0.1:7000",
+			"input": "127.0.0.1:8000",
+			"heartbeat": {
+				"bind": {
+					"ip": "0.0.0.0",
+					"port": 10000
+				},
+				"connect": {
+					"ip": "127.0.0.1",
+					"port": 10000
+				}
+			}
+		},{
+            "output": "127.0.0.1:7001",
+            "input": "127.0.0.1:8001",
+			"heartbeat": {
+				"bind": {
+					"ip": "0.0.0.0",
+					"port": 10001
+				},
+				"connect": {
+					"ip": "127.0.0.1",
+					"port": 10001
+				}
+			}
+        },{
+            "output": "127.0.0.1:7002",
+            "input": "127.0.0.1:8002",
+			"heartbeat": {
+				"bind": {
+					"ip": "0.0.0.0",
+					"port": 10002
+				},
+				"connect": {
+					"ip": "127.0.0.1",
+					"port": 10002
+				}
+			}
+        }
+    ]
+}
