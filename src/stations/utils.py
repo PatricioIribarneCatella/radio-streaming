@@ -5,15 +5,17 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
 import middleware.constants as cons
 import rebroadcast.messages as m
-from middleware.channels import InterNode
+from middleware.channels import InterNode, Poller
 
 def search_leader(country, config):
 
-    antennas = [InterNode(cons.REQ)
-                    for i in range(0, self.antennas)]
+    nodes = len(config["retransmitter_endpoints"][country])
 
-    for i in range(0, self.antennas):
-        antennas[i].connect(self.config["retransmitter_endpoints"][self.country][i]["query-leader"]["connect"])
+    antennas = [InterNode(cons.REQ)
+                    for i in range(0, nodes)]
+
+    for i in range(0, nodes):
+        antennas[i].connect(config["retransmitter_endpoints"][country][i]["query-leader"]["connect"])
         antennas[i].set(cons.LINGER, 0)
 
     poller = Poller(antennas)

@@ -35,8 +35,8 @@ class SenderListener(Process):
         leader = search_leader(self.country, self.config)
 
         # The leader is up
-        lid = leader["node"]
-        self.listener.connect(self.config["retransmitter_endpoints"][self.country][int(lid)]["alive"]["connect"],
+        lid = int(leader["node"])
+        self.listener.connect(self.config["retransmitter_endpoints"][self.country][lid]["alive"]["connect"],
                                 timeout=cons.TIMEOUT)
         
         # Notify the transmitter
