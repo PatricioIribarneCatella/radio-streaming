@@ -5,6 +5,7 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
 import middleware.constants as cons
 import rebroadcast.messages as m
+from stations.utils import search_leader
 from middleware.channels import InterNode, InterProcess, Poller
 
 class LeaderElection(object):
@@ -57,5 +58,45 @@ class LeaderElection(object):
                 msg, nid = s.recv()
                 yield msg, nid
 
+class SenderStation(object):
+
+    def __init__(self, country, freq, config):
+        
+        self.country = country
+        self.frequency = freq
+        self.config = config
+
+        self.transmitter = InterProcess(cons.PUSH)
+        self.transmitter.bind("station-sender-data-{}".format(
+                            self.frequency))
+        
+    def query(self):
+
+        leader = search_leader(self.country, self.config)
+
+        lid = int(leader["node"])
+
+        # Connects to leader
+        # and sends a 'transmitting request'
+
+        admin = InterNode(cons.REQ)
+        admin.connect(self.config["retransmitter_endpoints"][self.country][lid]["admin"])
+
+        admin.send({"type": m.START_TRANSMITTING,
+                    "frequency": self.frequency})
+
+        res = admin.recv()
+
+        return res["status"] == "ok"
+
+    def transmit(self, chunk):
+
+        data = {"mtype": m.NEW_DATA, "data": chunk}
+
+        self.transmitter.send(data)
+
+    def close(self):
+
+        self.transmitter.close()
 
 

@@ -28,6 +28,7 @@ class Retransmitter(Process):
         super(Retransmitter, self).__init__()
 
     def _start_connections(self):
+        
         self.context = zmq.Context()
         self.poller = zmq.Poller()
 
@@ -126,11 +127,13 @@ class Retransmitter(Process):
             return self.leader_admin_socket.recv_json()
 
     def _respond_admin_queries(self):
+        
         query = self.admin_socket.recv_json()
         response = self._treat_query(query)
         self.admin_socket.send_json(response)
 
     def _retransmit(self):
+        
         while True:
             for socket_with_data, _ in self.poller.poll(100):
                 if socket_with_data is self.admin_socket:
@@ -140,6 +143,7 @@ class Retransmitter(Process):
                     self._transmit_message(frequency, message)
 
     def _close(self):
+        
         self.output_socket.close()
         self.input_socket.close()
         self.context.term()

@@ -37,6 +37,10 @@ class InterNode(object):
 
         self.socket = zmq.Context().socket(sock_type)
 
+    def set(self, opt, value):
+
+        self.socket.setsockopt(opt, value)
+
     def bind(self, interface):
         self.socket.bind("{}{}:{}".format(
                                 TCP_CONN,

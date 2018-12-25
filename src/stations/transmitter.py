@@ -1,78 +1,80 @@
-import re
-import zmq
-import random
+import sys
+from os import path
 from time import sleep
-from scipy.io import wavfile
 from multiprocessing import Process
 
-class InvalidFrequency(Exception):
-    pass
+sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
-class Sender(Process):
+import middleware.constants as cons
+import rebroadcast.messages as m
+from middleware.channels import InterNode, InterProcess, Poller
 
-    def __init__(self, frequency_code, input_file, config):
+class Transmitter(Process):
 
-        match = re.match(r'^(\w{2,3})-\d{2,3}\.\d$', frequency_code)
-        
-        if match is None:
-            raise InvalidFrequency
+    def __init__(self, country, frequency_code, config):
 
-        self.country = match.group(1)
-        self.input_file = input_file
+        self.config = config
+        self.country = country
         self.frequency_code = frequency_code
         
-        self.output_endpoint = random.choice(config['retransmitter_endpoints'][self.country])['input']
-        self.admin_endpoint = random.choice(config['retransmitter_endpoints'][self.country])['admin']
+    def _initialize(self):
 
-    def _start_connections(self):
-        
-        self.bitrate, self.data = wavfile.read(self.input_file)
+        self.output = InterNode(cons.PUSH)
 
-        self.context = zmq.Context()
-        self.output_socket = self.context.socket(zmq.PUSH)
-        self.output_socket.connect('tcp://{}'.format(self.output_endpoint))
+        self.data = InterProcess(cons.PULL)
+        self.data.connect("station-sender-data-{}".format(
+                            self.frequency_code))
 
-        self.admin_socket = self.context.socket(zmq.REQ)
-        self.admin_socket.connect('tcp://{}'.format(self.admin_endpoint))
+        self.signal = InterProcess(cons.PULL)
+        self.signal.connect("station-sender-signal-{}".format(
+                            self.frequency_code))
 
-        self.admin_socket.send_json({"type": "start_transmitting", "frequency": self.frequency_code})
-        response = self.admin_socket.recv_json()
-        
-        return response['status'] == 'ok'
+        self.poller = Poller([self.signal,
+                              self.data])
+
+    def _wait_for_leader(self):
+
+        # Wait for signal of listener module
+        # which means a call to recv() on signal channel
+
+        data = self.signal.recv()
+        leader = int(data["node"])
+
+        output_endpoint = self.config["retransmitter_endpoints"][self.country][leader]["input"]
+        self.output.connect(output_endpoint)
 
     def _transmit(self):
-        
-        try:
-            data_length = len(self.data)
-            window_size = self.bitrate
-            
-            while True:
-                offset = 0
-                while data_length > offset + window_size:
-                    self.output_socket.send_multipart(\
-                        [self.frequency_code.encode(), self.data[offset : offset + window_size]])
-                    offset += window_size
-                    sleep(0.99)
-        except KeyboardInterrupt:
-            pass
 
-    def _close(self, disconnect):
+        while True:
+
+            socks = self.poller.poll()
+
+            for s, poll_type in socks:
+
+                # receive messages from:
+                # data -> forward to antenna (output channel)
+                # signal -> change leader and connect to it
+                msg = s.recv()
+                
+                if msg["mtype"] == m.NEW_DATA:
+                    self.output.send(msg["data"])
+                elif msg["mtype"] == m.LEADER_DOWN:
+                    self._wait_for_leader()
+
+    def _close(self):
         
-        self.output_socket.close()
-        
-        if disconnect:
-            self.admin_socket.send_json({"type": "stop_transmitting", "frequency": self.frequency_code})
-            if self.admin_socket.recv_json()['status'] != 'ok':
-                print('Error')
-        
-        self.admin_socket.close()
-        self.context.term()
+        self.output.close()
+        self.signal.close()
+        self.data.close()
 
     def run(self):
         
-        can_transmit = self._start_connections()
-        if can_transmit:
-            self._transmit()
-        self._close(can_transmit)
+        self._initialize()
+
+        self._wait_for_leader()
+
+        self._transmit()
+
+        self._close()
 
 

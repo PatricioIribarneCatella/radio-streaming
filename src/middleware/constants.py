@@ -8,6 +8,8 @@ POLLOUT = zmq.POLLOUT
 HB_TIME = 2
 TIMEOUT = HB_TIME * 2
 
+LINGER = zmq.LINGER
+
 # Middleware channel types
 
 REQ = zmq.REQ
