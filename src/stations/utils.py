@@ -28,18 +28,29 @@ def search_leader(country, config):
         for a in antennas:
             a.send({"mtype": m.IS_LEADER, "node": 0})
 
-        socks = poller.poll()
+        i = len(antennas)
 
         answers = []
         
-        for s, poll_type in socks:
-            answers.append(s.recv())
+        while i > 0:
+            
+            socks = poller.poll(cons.TIMEOUT)
 
-        leader = list(filter(lambda x: x["mtype"] == m.LEADER, answers))
+            if len(socks) == 0:
+                i -= 1
+        
+            for s, poll_type in socks:
+                answers.append(s.recv())
+                i -= 1
+
+        leader = list(filter(lambda x: x[0] == m.LEADER, answers))
         
         if len(leader) > 0:
             leader_found = True
 
-    return leader[0]
+    for a in antennas:
+        a.close()
+
+    return leader[0][1]
 
 

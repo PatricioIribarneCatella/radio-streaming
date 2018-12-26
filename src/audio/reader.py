@@ -1,22 +1,27 @@
-import wave
+from scipy.io import wavfile
 
 class AudioReader(object):
 
     def __init__(self, input_file):
-        self.wavfile = wave.open(input_file, 'rb')
-        self.bitrate = self.wavfile.getframerate()
+
+        self.bitrate, self.data = wavfile.read(input_file)
+        self.length = len(self.data)
+        self.offset = 0
 
     def chunks(self):
 
         window = self.bitrate
 
-        data = self.wavfile.readframes(window)
-
-        while data != "".encode():
-            yield data
-            data = self.wavfile.readframes(window)
+        while self.offset < self.length:
+            if self.offset + window >= self.length:
+                chunk = self.data[self.offset :]
+                self.offset = self.length
+            else:
+                chunk = self.data[self.offset : self.offset + window]
+                self.offset += window + 1
+            yield chunk
 
     def reset(self):
-        self.wavfile.rewind()
+        self.offset = 0
 
 

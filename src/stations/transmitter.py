@@ -7,7 +7,7 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
 import middleware.constants as cons
 import rebroadcast.messages as m
-from middleware.channels import InterNode, InterProcess, Poller
+from middleware.channels import DataInterNode, InterProcess, DataInterProcess, Poller
 
 class Transmitter(Process):
 
@@ -16,12 +16,14 @@ class Transmitter(Process):
         self.config = config
         self.country = country
         self.frequency_code = frequency_code
+
+        super(Transmitter, self).__init__()
         
     def _initialize(self):
 
-        self.output = InterNode(cons.PUSH)
+        self.output = DataInterNode(cons.PUSH)
 
-        self.data = InterProcess(cons.PULL)
+        self.data = DataInterProcess(cons.PULL)
         self.data.connect("station-sender-data-{}".format(
                             self.frequency_code))
 
@@ -37,8 +39,8 @@ class Transmitter(Process):
         # Wait for signal of listener module
         # which means a call to recv() on signal channel
 
-        data = self.signal.recv()
-        leader = int(data["node"])
+        msg, nid = self.signal.recv()
+        leader = int(nid)
 
         output_endpoint = self.config["retransmitter_endpoints"][self.country][leader]["input"]
         self.output.connect(output_endpoint)
@@ -47,18 +49,20 @@ class Transmitter(Process):
 
         while True:
 
-            socks = self.poller.poll()
+            socks = self.poller.poll(None)
 
             for s, poll_type in socks:
 
                 # receive messages from:
-                # data -> forward to antenna (output channel)
-                # signal -> change leader and connect to it
-                msg = s.recv()
+                #   data -> forward to antenna (output channel)
+                #   signal -> change leader and connect to it
+                mtype, msg = s.recv()
                 
-                if msg["mtype"] == m.NEW_DATA:
-                    self.output.send(msg["data"])
-                elif msg["mtype"] == m.LEADER_DOWN:
+                if mtype == m.NEW_DATA:
+                    msg = {"freq": msg["freq"],
+                           "data": msg["data"]}
+                    self.output.send(msg)
+                elif mtype == m.LEADER_DOWN:
                     self._wait_for_leader()
 
     def _close(self):
