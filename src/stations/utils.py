@@ -11,19 +11,19 @@ def search_leader(country, config):
 
     nodes = len(config["retransmitter_endpoints"][country])
 
-    antennas = [InterNode(cons.REQ)
-                    for i in range(0, nodes)]
-
-    for i in range(0, nodes):
-        antennas[i].connect(config["retransmitter_endpoints"][country][i]["query-leader"]["connect"])
-        antennas[i].set(cons.LINGER, 0)
-
-    poller = Poller(antennas)
-
     leader_found = False
     leader = None
 
     while not leader_found:
+        
+        antennas = [InterNode(cons.REQ)
+                        for i in range(0, nodes)]
+
+        for i in range(0, nodes):
+            antennas[i].connect(config["retransmitter_endpoints"][country][i]["query-leader"]["connect"])
+            antennas[i].set(cons.LINGER, 0)
+
+        poller = Poller(antennas)
 
         for a in antennas:
             a.send({"mtype": m.IS_LEADER, "node": 0})
@@ -48,8 +48,8 @@ def search_leader(country, config):
         if len(leader) > 0:
             leader_found = True
 
-    for a in antennas:
-        a.close()
+        for a in antennas:
+            a.close()
 
     return leader[0][1]
 

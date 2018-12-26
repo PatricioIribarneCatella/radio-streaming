@@ -34,6 +34,9 @@ class SenderListener(Process):
 
         lid = search_leader(self.country, self.config)
 
+        print("Listener-{}: elected leader is: {}".format(
+                    self.frequency, lid))
+
         # The leader is up
         self.listener.connect(self.config["retransmitter_endpoints"][self.country][lid]["alive"]["connect"],
                                 timeout=cons.TIMEOUT)

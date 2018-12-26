@@ -7,7 +7,7 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
 import middleware.constants as cons
 import rebroadcast.messages as m
-from middleware.channels import DataInterNode, InterProcess, DataInterProcess, Poller
+from middleware.channels import DataInterNode, InterNode, InterProcess, DataInterProcess, Poller
 
 class Transmitter(Process):
 
@@ -34,13 +34,26 @@ class Transmitter(Process):
         self.poller = Poller([self.signal,
                               self.data])
 
-    def _wait_for_leader(self):
+    def _wait_for_leader(self, first_time):
 
         # Wait for signal of listener module
         # which means a call to recv() on signal channel
 
         msg, nid = self.signal.recv()
         leader = int(nid)
+
+        if not first_time:
+            # Connects to leader
+            # and sends a 'transmitting request'
+            # to register the frequency in the new node
+            admin = InterNode(cons.REQ)
+            admin.connect(self.config["retransmitter_endpoints"][self.country][leader]["admin"])
+
+            admin.send({"type": m.START_TRANSMITTING,
+                        "frequency": self.frequency_code})
+
+            admin.recv()
+            admin.close()
 
         output_endpoint = self.config["retransmitter_endpoints"][self.country][leader]["input"]
         self.output.connect(output_endpoint)
@@ -63,7 +76,7 @@ class Transmitter(Process):
                            "data": msg["data"]}
                     self.output.send(msg)
                 elif mtype == m.LEADER_DOWN:
-                    self._wait_for_leader()
+                    self._wait_for_leader(False)
 
     def _close(self):
         
@@ -75,7 +88,7 @@ class Transmitter(Process):
         
         self._initialize()
 
-        self._wait_for_leader()
+        self._wait_for_leader(True)
 
         self._transmit()
 
