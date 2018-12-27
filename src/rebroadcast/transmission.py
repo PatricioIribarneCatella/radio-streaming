@@ -59,6 +59,8 @@ class Retransmitter(Process):
 
     def _transmit_message(self, frequency, message):
 
+        self.transmitting_state.update(frequency.decode())
+
         self.output_socket.send_multipart([frequency, message])
         
         print('sending {} {}'.format(frequency, self.outgoing_router))
@@ -84,12 +86,10 @@ class Retransmitter(Process):
 
     def _treat_query(self, query):
        
-        print("hola")
         freq_code = query['frequency']
         match = re.match(r'^(\w{2,3})-\d{2,3}\.\d$', freq_code)
         
         if match is None:
-            print("hola1")
             return {"mtype": m.INVALID_FREQ,
                     "node": self.node_number}
 
@@ -98,24 +98,13 @@ class Retransmitter(Process):
         if query['type'] == m.START_TRANSMITTING:
             
             if country != self.country:
-                print("hola2")
                 return {"mtype": m.NOT_SAME_COUNTRY,
                         "node": self.node_number}
             try:
                 self.transmitting_state.add(query['frequency'])
-                print("hola3")
             except InUseFreq:
-                print("hola4")
                 return {"mtype": m.IN_USE_FREQ,
                         "node": self.node_number}
-
-        elif query['type'] == m.STOP_TRANSMITTING:
-            
-            if country != self.country:
-                return {"mtype": m.NOT_SAME_COUNTRY,
-                        "node": self.node_number}
-
-            self.transmitting_state.remove(query['frequency'])
 
         elif query['type'] == m.LISTEN_OTHER_COUNTRY:
             
@@ -142,14 +131,11 @@ class Retransmitter(Process):
             return {"mtype": m.NOT_IMPLEMENTED_QUERY,
                     "node": self.node_number}
         
-        print("hola5")
         return {'mtype': m.OK, 'node': self.node_number}
 
     def _respond_admin_queries(self):
        
-        print("hola6")
         query = self.admin_socket.recv_json()
-        print("hola7")
         response = self._treat_query(query)
         self.admin_socket.send_json(response)
 

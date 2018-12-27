@@ -30,6 +30,9 @@ class Sender(object):
         # permission on transmitting this frequency
         res = self.connection.query()
 
+        if not res:
+            print("Frequency already in use")
+
         return res
 
     def _transmit(self):
