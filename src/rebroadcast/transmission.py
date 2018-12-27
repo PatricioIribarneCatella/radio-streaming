@@ -102,7 +102,7 @@ class Retransmitter(Process):
                     break
             
             if self.current_outgoing_router == None:
-                sleep (c.ROUTER_RECONNECT_TRIAL)
+                sleep(c.ROUTER_RECONNECT_TRIAL)
 
         print('router selected {}'.format(self.current_outgoing_router))
         return self.outgoing_router_socket[self.current_outgoing_router]       
@@ -116,7 +116,7 @@ class Retransmitter(Process):
         self.output_socket.send_multipart([frequency, message])
         
         print('sending {} to {} - from {}-{}'.format(frequency,
-                self.output_socket, self.country, self.node_number))
+                self.output_endpoint, self.country, self.node_number))
         
         # Dont retransmit to router international freq
         if frequency.decode().startswith(self.country + '-'): 
