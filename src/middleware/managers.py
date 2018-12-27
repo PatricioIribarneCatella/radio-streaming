@@ -5,7 +5,8 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
 import middleware.constants as cons
 import rebroadcast.messages as m
-from middleware.channels import InterNode, InterProcess, Poller
+from stations.utils import search_leader
+from middleware.channels import InterNode, DataTopicInterNode, InterProcess, DataInterProcess, Poller
 
 class LeaderElection(object):
 
@@ -16,6 +17,9 @@ class LeaderElection(object):
         self.aid = aid
 
         self.anthena = InterNode(cons.PUSH)
+
+        self.heartbeatc = InterProcess(cons.PUSH)
+        self.heartbeatc.bind("heartbeat-{}-{}".format(country, aid))
 
         self.monitorc = InterProcess(cons.PUSH)
         self.monitorc.bind("monitor-{}-{}".format(country, aid))
@@ -34,6 +38,10 @@ class LeaderElection(object):
     def monitor(self, message):
 
         self.monitorc.send(message)
+
+    def heartbeat(self, message):
+
+        self.heartbeatc.send(message)
 
     def send(self, message, receivers, node_type):
 
@@ -57,5 +65,101 @@ class LeaderElection(object):
                 msg, nid = s.recv()
                 yield msg, nid
 
+class SenderStation(object):
+
+    def __init__(self, country, freq, config):
+        
+        self.country = country
+        self.frequency = freq
+        self.config = config
+
+        self.transmitter = DataInterProcess(cons.PUSH)
+        self.transmitter.bind("station-sender-data-{}".format(
+                            self.frequency))
+        
+    def query(self):
+
+        lid = search_leader(self.country, self.config)
+
+        # Connects to leader
+        # and sends a 'transmitting request'
+        admin = InterNode(cons.REQ)
+        admin.connect(self.config["retransmitter_endpoints"][self.country][lid]["admin"])
+
+        admin.send({"type": m.START_TRANSMITTING,
+                    "frequency": self.frequency})
+
+        mtype, node = admin.recv()
+
+        admin.close()
+
+        return mtype == m.OK
+
+    def transmit(self, chunk):
+
+        data = {"mtype": m.NEW_DATA,
+                "freq":self.frequency,
+                "data": chunk}
+
+        self.transmitter.send(data)
+
+    def close(self):
+
+        self.transmitter.close()
+
+
+class ReceiverStation(object):
+
+    def __init__(self, freq, country, config):
+ 
+        self.country = country
+        self.freq = freq
+        self.config = config
+
+        broadcasters = map(lambda x: x['output'], config['retransmitter_endpoints'][self.country])
+
+        self.receivers = []
+
+        for endpoint in broadcasters:
+            s = DataTopicInterNode([self.freq])
+            s.connect(endpoint)
+            self.receivers.append(s)
+
+        self.poller = Poller(self.receivers)
+
+    def recv(self):
+
+        socks = self.poller.poll(0.1)
+
+        for s, poll_type in socks:
+            if poll_type == cons.POLLIN:
+                freq, data = s.recv()
+                yield data
+
+    def close(self):
+
+        for s in self.receivers:
+            s.close()
+
+class InternationalReceiverStation(object):
+
+    def __init__(self, country, frequency, config):
+
+        self.config = config
+        self.country = country
+        self.frequency = frequency
+        
+        self.receiver = DataInterProcess(cons.PULL)
+        self.receiver.bind("station-receiver-data-{}".format(
+                                self.frequency))
+
+    def recv(self):
+        
+        mtype, msg = self.receiver.recv()
+        return msg["data"]
+
+    def close(self):
+
+        self.receiver.close()
 
 

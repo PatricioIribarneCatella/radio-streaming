@@ -99,48 +99,118 @@
 				"port": 9002
 			}
 		}
+            }],
+	"BR": [
+            {
+                "output": "127.0.0.1:4010",
+                "input": "127.0.0.1:3010",
+                "admin": "127.0.0.1:2010",
+                "connect": {
+			"ip": "localhost",
+			"port": 5003
+		},
+		"bind": {
+			"ip": "0.0.0.0",
+			"port": 5003
+		},
+		"alive": {
+			"bind": {
+				"ip": "0.0.0.0",
+				"port": 6003
+			},
+			"connect": {
+				"ip": "localhost",
+				"port": 6003
+			}
+		},
+		"query-leader": {
+			"bind": {
+				"ip": "0.0.0.0",
+				"port": 9003
+			},
+			"connect": {
+				"ip": "localhost",
+				"port": 9003
+			}
+		}
+            },
+            {
+                "output": "127.0.0.1:4011",
+                "input": "127.0.0.1:3011",
+                "admin": "127.0.0.1:2011",
+                "connect": {
+			"ip": "localhost",
+			"port": 5004
+		},
+		"bind": {
+			"ip": "0.0.0.0",
+			"port": 5004
+		},
+		"alive": {
+			"bind": {
+				"ip": "0.0.0.0",
+				"port": 6004
+			},
+			"connect": {
+				"ip": "localhost",
+				"port": 6004
+			}
+		},
+		"query-leader": {
+			"bind": {
+				"ip": "0.0.0.0",
+				"port": 9004
+			},
+			"connect": {
+				"ip": "localhost",
+				"port": 9004
+			}
+		}
+            },
+            {
+                "output": "127.0.0.1:4012",
+                "input": "127.0.0.1:3012",
+                "admin": "127.0.0.1:2012",
+                "connect": {
+			"ip": "localhost",
+			"port": 5005
+		},
+		"bind": {
+			"ip": "0.0.0.0",
+			"port": 5005
+		},
+		"alive": {
+			"bind": {
+				"ip": "0.0.0.0",
+				"port": 6005
+			},
+			"connect": {
+				"ip": "localhost",
+				"port": 6005
+			}
+		},
+		"query-leader": {
+			"bind": {
+				"ip": "0.0.0.0",
+				"port": 9005
+			},
+			"connect": {
+				"ip": "localhost",
+				"port": 9005
+			}
+		}
             }]
    },
    "routers_endpoints": [
         {
             "output": "127.0.0.1:7000",
-			"input": "127.0.0.1:8000",
-			"heartbeat": {
-				"bind": {
-					"ip": "0.0.0.0",
-					"port": 10000
-				},
-				"connect": {
-					"ip": "127.0.0.1",
-					"port": 10000
-				}
-			}
-		},{
+            "input": "127.0.0.1:8000"
+        },{
             "output": "127.0.0.1:7001",
-            "input": "127.0.0.1:8001",
-			"heartbeat": {
-				"bind": {
-					"ip": "0.0.0.0",
-					"port": 10001
-				},
-				"connect": {
-					"ip": "127.0.0.1",
-					"port": 10001
-				}
-			}
+            "input": "127.0.0.1:8001"
         },{
             "output": "127.0.0.1:7002",
-            "input": "127.0.0.1:8002",
-			"heartbeat": {
-				"bind": {
-					"ip": "0.0.0.0",
-					"port": 10002
-				},
-				"connect": {
-					"ip": "127.0.0.1",
-					"port": 10002
-				}
-			}
+            "input": "127.0.0.1:8002"
         }
     ]
 }

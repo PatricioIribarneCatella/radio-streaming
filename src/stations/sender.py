@@ -1,75 +1,76 @@
-import re
-import zmq
-import random
+import sys
+from os import path
 from time import sleep
-from scipy.io import wavfile
-from multiprocessing import Process
 
-class Sender(Process):
+sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
-    def __init__(self, frequency_code, input_file, config):
+from audio.reader import AudioReader
+from middleware.managers import SenderStation
+from stations.transmitter import Transmitter
+from stations.listeners import SenderListener
 
-        match = re.match(r'^(\w{2,3})-\d{2,3}\.\d$', frequency_code)
-        
-        if match is None:
-            raise InvalidFrequency
+class Sender(object):
 
-        self.country = match.group(1)
+    def __init__(self, frequency_code, country, input_file, config):
+
+        self.config = config
+        self.country = country
         self.input_file = input_file
         self.frequency_code = frequency_code
         
-        self.output_endpoint = random.choice(config['retransmitter_endpoints'][self.country])['input']
-        self.admin_endpoint = random.choice(config['retransmitter_endpoints'][self.country])['admin']
+        self.audio = AudioReader(self.input_file)
 
-    def _start_connections(self):
-        
-        self.bitrate, self.data = wavfile.read(self.input_file)
+    def _initialize(self):
 
-        self.context = zmq.Context()
-        self.output_socket = self.context.socket(zmq.PUSH)
-        self.output_socket.connect('tcp://{}'.format(self.output_endpoint))
+        self.connection = SenderStation(self.country,
+                                        self.frequency_code,
+                                        self.config)
 
-        self.admin_socket = self.context.socket(zmq.REQ)
-        self.admin_socket.connect('tcp://{}'.format(self.admin_endpoint))
+        # Query the antenna leader for
+        # permission on transmitting this frequency
+        res = self.connection.query()
 
-        self.admin_socket.send_json({"type": "start_transmitting", "frequency": self.frequency_code})
-        response = self.admin_socket.recv_json()
-        
-        return response['status'] == 'ok'
+        if not res:
+            print("Frequency already in use")
+
+        return res
 
     def _transmit(self):
         
         try:
-            data_length = len(self.data)
-            window_size = self.bitrate
-            
             while True:
-                offset = 0
-                while data_length > offset + window_size:
-                    self.output_socket.send_multipart(\
-                        [self.frequency_code.encode(), self.data[offset : offset + window_size]])
-                    offset += window_size
+
+                for chunk in self.audio.chunks():
+
+                    self.connection.transmit(chunk)
                     sleep(0.99)
+
+                self.audio.reset()
+
         except KeyboardInterrupt:
             pass
 
-    def _close(self, disconnect):
-        
-        self.output_socket.close()
-        
-        if disconnect:
-            self.admin_socket.send_json({"type": "stop_transmitting", "frequency": self.frequency_code})
-            if self.admin_socket.recv_json()['status'] != 'ok':
-                print('Error')
-        
-        self.admin_socket.close()
-        self.context.term()
-
     def run(self):
         
-        can_transmit = self._start_connections()
+        can_transmit = self._initialize()
+        
         if can_transmit:
+
+            t = Transmitter(self.country,
+                            self.frequency_code,
+                            self.config)
+            t.start()
+
+            l = SenderListener(self.country,
+                               self.frequency_code,
+                               self.config)
+            l.start()
+
             self._transmit()
-        self._close(can_transmit)
+
+            t.join()
+            l.join()
+
+        self.connection.close()
 
 
