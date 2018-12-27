@@ -13,8 +13,7 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
 import rebroadcast.messages as m
 from middleware import constants as c
-from rebroadcast.transmiting_state import TransmitingState, InUseFreq
-from rebroadcast.listening_state import ListeningState
+from rebroadcast.managers import TransmissionRegistry, InternationalRegistry, InUseFreq
 from rebroadcast.heartbeat_router_listener import HeartbeatListener
 
 class Retransmitter(Process):
@@ -34,13 +33,13 @@ class Retransmitter(Process):
                 list(map(lambda x: x['heartbeat']['connect'], config['routers_endpoints']))
         
         self.current_outgoing_router = random.randint(0, len(self.possible_outgoing_routers_heartbeat) - 1)
-        
         print('Picked router {}'.format(self.current_outgoing_router))
         
         self.possible_outgoing_routers_endpoint = map(lambda x: x['input'], config['routers_endpoints'])
         self.router_last_timestamp_alive = [datetime.now() for i in self.possible_outgoing_routers_heartbeat]
-        self.transmitting_state = TransmitingState()
-        self.listening_state = ListeningState()
+        
+        self.tx_registry = TransmissionRegistry()
+        self.inter_registry = InternationalRegistry()
         
         super(Retransmitter, self).__init__()
 
@@ -109,7 +108,7 @@ class Retransmitter(Process):
 
     def _transmit_message(self, frequency, message):
         
-        self.transmitting_state.update(frequency.decode())
+        self.tx_registry.update(frequency.decode())
         
         outgoing_socket  = self._get_outgoing_socket()
 
@@ -155,7 +154,7 @@ class Retransmitter(Process):
                 return {"mtype": m.NOT_SAME_COUNTRY,
                         "node": self.node_number}
             try:
-                self.transmitting_state.add(query['frequency'])
+                self.tx_registry.add(query['frequency'])
             except InUseFreq:
                 return {"mtype": m.IN_USE_FREQ,
                         "node": self.node_number}
@@ -166,7 +165,7 @@ class Retransmitter(Process):
                 return {"mtype": m.SAME_COUNTRY,
                         "node": self.node_number}
 
-            should_start_listening = self.listening_state.add(freq_code)
+            should_start_listening = self.inter_registry.add(freq_code)
             
             if should_start_listening:
                 self._start_listening(freq_code)
@@ -177,7 +176,7 @@ class Retransmitter(Process):
                 return {"mtype": m.SAME_COUNTRY,
                         "node": self.node_number}
 
-            should_stop_listening = self.listening_state.remove(freq_code)
+            should_stop_listening = self.inter_registry.remove(freq_code)
             
             if should_stop_listening:
                 self._stop_listening(freq_code)
