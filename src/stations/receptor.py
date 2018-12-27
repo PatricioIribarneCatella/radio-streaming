@@ -62,25 +62,29 @@ class Receptor(Process):
 
     def _receive(self):
 
-        while True:
+        try:
+            while True:
 
-            socks = self.poller.poll(None)
+                socks = self.poller.poll(None)
 
-            for s, poll_type in socks:
-                
-                # receive messages from:
-                #   data -> from the antenna (intput channel)
-                #       send it to main process via 'data channel'
-                #   signal -> change leader and connect to it
-                first, chunk = s.recv()
+                for s, poll_type in socks:
+                    
+                    # receive messages from:
+                    #   data -> from the antenna (intput channel)
+                    #       send it to main process via 'data channel'
+                    #   signal -> change leader and connect to it
+                    first, chunk = s.recv()
 
-                if first == m.LEADER_DOWN or first == m.LEADER_UP:
-                    self._wait_for_leader()
-                else:
-                    msg = {"mtype": m.NEW_DATA,
-                           "freq": self.frequency,
-                           "data": chunk}
-                    self.data.send(msg)
+                    if first == m.LEADER_DOWN or first == m.LEADER_UP:
+                        self._wait_for_leader()
+                    else:
+                        msg = {"mtype": m.NEW_DATA,
+                               "freq": self.frequency,
+                               "data": chunk}
+                        self.data.send(msg)
+
+        except KeyboardInterrupt:
+            pass
 
     def _unsubscribe(self):
 
@@ -104,7 +108,7 @@ class Receptor(Process):
         self._unsubscribe()
 
     def run(self):
-        
+
         self._initialize()
 
         self._wait_for_leader()

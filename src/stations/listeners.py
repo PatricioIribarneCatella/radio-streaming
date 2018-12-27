@@ -57,17 +57,21 @@ class SenderListener(Process):
 
         self._initialize()
 
-        while True:
+        try:
+            while True:
 
-            try:
-                mtype, node = self.listener.recv()
-                if node["state"] == m.NOT_LEADER:
-                    self.transmitter.send({"mtype": m.LEADER_UP, "node": 0})
+                try:
+                    mtype, node = self.listener.recv()
+                    if node["state"] == m.NOT_LEADER:
+                        self.transmitter.send({"mtype": m.LEADER_UP, "node": 0})
+                        self._look_for_leader()
+                except TimeOut:
+                    print("Sender listener: Leader down")
+                    self.transmitter.send({"mtype": m.LEADER_DOWN, "node": 0})
                     self._look_for_leader()
-            except TimeOut:
-                print("Sender listener: Leader down")
-                self.transmitter.send({"mtype": m.LEADER_DOWN, "node": 0})
-                self._look_for_leader()
+        
+        except KeyboardInterrupt:
+            pass
 
         self.listener.close()
         self.transmitter.close()
@@ -121,17 +125,21 @@ class ReceiverListener(Process):
 
         self._initialize()
 
-        while True:
+        try:
+            while True:
 
-            try:
-                mtype, node = self.listener.recv()
-                if node["state"] == m.NOT_LEADER:
-                    self.receiver.send({"mtype": m.LEADER_UP, "node": 0})
+                try:
+                    mtype, node = self.listener.recv()
+                    if node["state"] == m.NOT_LEADER:
+                        self.receiver.send({"mtype": m.LEADER_UP, "node": 0})
+                        self._look_for_leader()
+                except TimeOut:
+                    print("Receiver listener: Leader down")
+                    self.receiver.send({"mtype": m.LEADER_DOWN, "node": 0})
                     self._look_for_leader()
-            except TimeOut:
-                print("Receiver listener: Leader down")
-                self.receiver.send({"mtype": m.LEADER_DOWN, "node": 0})
-                self._look_for_leader()
+
+        except KeyboardInterrupt:
+            pass
 
         self.listener.close()
         self.receiver.close()

@@ -1,4 +1,5 @@
 import sys
+import signal
 from os import path
 from time import sleep
 from multiprocessing import Process
@@ -62,23 +63,27 @@ class Transmitter(Process):
 
     def _transmit(self):
 
-        while True:
+        try:
+            while True:
 
-            socks = self.poller.poll(None)
+                socks = self.poller.poll(None)
 
-            for s, poll_type in socks:
+                for s, poll_type in socks:
 
-                # receive messages from:
-                #   data -> forward to antenna (output channel)
-                #   signal -> change leader and connect to it
-                mtype, msg = s.recv()
-                
-                if mtype == m.NEW_DATA:
-                    msg = {"freq": msg["freq"],
-                           "data": msg["data"]}
-                    self.output.send(msg)
-                elif mtype == m.LEADER_DOWN or mtype == m.LEADER_UP:
-                    self._wait_for_leader(False)
+                    # receive messages from:
+                    #   data -> forward to antenna (output channel)
+                    #   signal -> change leader and connect to it
+                    mtype, msg = s.recv()
+                    
+                    if mtype == m.NEW_DATA:
+                        msg = {"freq": msg["freq"],
+                               "data": msg["data"]}
+                        self.output.send(msg)
+                    elif mtype == m.LEADER_DOWN or mtype == m.LEADER_UP:
+                        self._wait_for_leader(False)
+
+        except KeyboardInterrupt:
+            pass
 
     def _close(self):
         

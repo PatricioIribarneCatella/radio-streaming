@@ -41,7 +41,7 @@ class Receiver(object):
         self.player.close()
 
     def run(self):
-        
+
         self._initialize()
 
         self._receive()
@@ -84,7 +84,7 @@ class InternationalReceiver(object):
     def run(self):
 
         self._initialize()
-        
+
         r = Receptor(self.country,
                      self.frequency,
                      self.config)
@@ -97,7 +97,7 @@ class InternationalReceiver(object):
         l.start()
 
         self._receive()
-        
+
         r.join()
         l.join()
 
