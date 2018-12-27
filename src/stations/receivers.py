@@ -58,21 +58,41 @@ class InternationalReceiver(object):
         self.freq_country = freq_country
         self.config = config
 
+        self.player = AudioPlayer(config.get('bitrate', 16000))
+
     def _initialize(self):
-        pass
+        
+        self.connection = InternationalReceiverStation(self.country,
+                                                    self.frequency,
+                                                    self.config)
+
+    def _receive(self):
+
+        try:
+
+            while True:
+                chunk = self.connection.recv()
+                self.player.play(chunk)
+        except KeyboardInterrupt:
+            pass
+
+    def _close(self):
+
+        self.connection.close()
+        self.player.close()
 
     def run(self):
 
         self._initialize()
         
         r = Receptor(self.country,
-                     self.frequency_code,
+                     self.frequency,
                      self.config)
 
         r.start()
 
         l = ReceiverListener(self.country,
-                             self.frequency_code,
+                             self.frequency,
                              self.config)
         l.start()
 
@@ -80,4 +100,6 @@ class InternationalReceiver(object):
         
         r.join()
         l.join()
+
+        self._close()
 

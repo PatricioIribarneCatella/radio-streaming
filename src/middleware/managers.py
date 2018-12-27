@@ -136,10 +136,23 @@ class ReceiverStation(object):
 
 class InternationalReceiverStation(object):
 
-    def __init__(self):
-        pass
+    def __init__(self, country, frequency, config):
 
-    def run(self):
-        pass
+        self.config = config
+        self.country = country
+        self.frequency = frequency
+        
+        self.receiver = DataInterProcess(cons.PULL)
+        self.receiver.bind("station-receiver-data-{}".format(
+                                self.frequency))
+
+    def recv(self):
+        
+        mtype, msg = self.receiver.recv()
+        return msg["data"]
+
+    def close(self):
+
+        self.receiver.close()
 
 

@@ -27,7 +27,8 @@ def main(country, frequency, config):
         r.run()
     else:
         ir = InternationalReceiver(country, frequency,
-                                   freq_country, config)
+                                   freq_country,
+                                   config_data)
         ir.run()
 
 if __name__ == "__main__":

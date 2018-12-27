@@ -16,7 +16,6 @@ class SenderListener(Process):
         self.frequency = frequency
         self.country = country
         self.config = config
-        self.antennas = len(config["retransmitter_endpoints"][self.country])
 
         super(SenderListener, self).__init__()
 
@@ -34,7 +33,7 @@ class SenderListener(Process):
 
         lid = search_leader(self.country, self.config)
 
-        print("Listener-{}: elected leader is: {}".format(
+        print("Listener (sender)-{}: elected leader is: {}".format(
                     self.frequency, lid))
 
         # The leader is up
@@ -66,11 +65,12 @@ class SenderListener(Process):
                 self._look_for_leader()
 
         self.listener.close()
+        self.transmitter.close()
 
 
 class ReceiverListener(Process):
 
-    def __init__(self, frequency, country, config):
+    def __init__(self, country, frequency, config):
         
         self.config = config
         self.frequency = frequency
@@ -78,7 +78,52 @@ class ReceiverListener(Process):
 
         super(ReceiverListener, self).__init__()
 
+    def _initialize(self):
+
+        self.listener = TopicInterNode([""])
+        
+        self.receiver = InterProcess(cons.PUSH)
+        self.receiver.bind("station-receiver-signal-{}".format(
+                                self.frequency))
+
+        self._look_for_leader()
+
+    def _look_for_leader(self):
+
+        lid = search_leader(self.country, self.config)
+
+        print("Listener (receiver)-{}: elected leader is: {}".format(
+                    self.frequency, lid))
+
+        # The leader is up
+        self.listener.connect(self.config["retransmitter_endpoints"][self.country][lid]["alive"]["connect"],
+                                timeout=cons.TIMEOUT)
+        
+        # Notify the receiver
+        # which node is the leader
+        self.receiver.send({"mtype": m.LEADER, "node": lid})
+
     def run(self):
-        pass
+        
+        # Listen for leader's heartbeats
+        # If no response from leader,
+        # send FAIL signal to receiver
+        # module and look for a new leader.
+        # Finally notify the receiver about
+        # the change.
+
+        self._initialize()
+
+        while True:
+
+            try:
+                self.listener.recv()
+            except TimeOut:
+                print("Receiver listener: Leader down")
+                self.receiver.send({"mtype": m.LEADER_DOWN, "node": 0})
+                self._look_for_leader()
+
+        self.listener.close()
+        self.receiver.close()
 
 
