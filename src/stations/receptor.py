@@ -16,6 +16,7 @@ class Receptor(Process):
         self.country = country
         self.frequency = frequency
         self.config = config
+        self.input_endpoint = None
 
         super(Receptor, self).__init__()
 
@@ -55,8 +56,9 @@ class Receptor(Process):
         admin.recv()
         admin.close()
 
-        input_endpoint = self.config["retransmitter_endpoints"][self.country][leader]["output"]
-        self.input.connect(input_endpoint)
+        self.input.disconnect(self.input_endpoint)
+        self.input_endpoint = self.config["retransmitter_endpoints"][self.country][leader]["output"]
+        self.input.connect(self.input_endpoint)
 
     def _receive(self):
 
@@ -72,7 +74,7 @@ class Receptor(Process):
                 #   signal -> change leader and connect to it
                 first, chunk = s.recv()
 
-                if first == m.LEADER_DOWN:
+                if first == m.LEADER_DOWN or first == m.LEADER_UP:
                     self._wait_for_leader()
                 else:
                     msg = {"mtype": m.NEW_DATA,

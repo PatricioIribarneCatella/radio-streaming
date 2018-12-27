@@ -100,7 +100,7 @@ class Detector(Process):
 
                 if msg == m.I_AM_ALIVE:
                     print("failure detector - country: {}, node: {} - recv I_AM_ALIVE from: {}".format(
-                            self.country, self.aid, nid))
+                            self.country, self.aid, nid["id"]))
 
         self.fail.close()
         self.next.close()

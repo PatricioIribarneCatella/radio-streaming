@@ -24,6 +24,9 @@ class InterProcess(object):
     def get_connection(self):
         return self.socket
 
+    def poll(self, timeout):
+        return self.socket.poll(timeout)
+
     def send(self, message):
         self.socket.send_json(message)
 
@@ -74,10 +77,15 @@ class InterNode(object):
     def disconnect(self, interface):
 
         if interface != None:
-            self.socket.disconnect("{}{}:{}".format(
-                                    TCP_CONN,
-                                    interface["ip"],
-                                    interface["port"]))
+            if type(interface) == str:
+                self.socket.disconnect("{}{}".format(
+                                        TCP_CONN,
+                                        interface))
+            else:
+                self.socket.disconnect("{}{}:{}".format(
+                                        TCP_CONN,
+                                        interface["ip"],
+                                        interface["port"]))
 
     def get_connection(self):
         return self.socket

@@ -16,6 +16,7 @@ class Transmitter(Process):
         self.config = config
         self.country = country
         self.frequency_code = frequency_code
+        self.output_endpoint = None
 
         super(Transmitter, self).__init__()
         
@@ -55,8 +56,9 @@ class Transmitter(Process):
             admin.recv()
             admin.close()
 
-        output_endpoint = self.config["retransmitter_endpoints"][self.country][leader]["input"]
-        self.output.connect(output_endpoint)
+        self.output.disconnect(self.output_endpoint)
+        self.output_endpoint = self.config["retransmitter_endpoints"][self.country][leader]["input"]
+        self.output.connect(self.output_endpoint)
 
     def _transmit(self):
 
@@ -75,7 +77,7 @@ class Transmitter(Process):
                     msg = {"freq": msg["freq"],
                            "data": msg["data"]}
                     self.output.send(msg)
-                elif mtype == m.LEADER_DOWN:
+                elif mtype == m.LEADER_DOWN or mtype == m.LEADER_UP:
                     self._wait_for_leader(False)
 
     def _close(self):

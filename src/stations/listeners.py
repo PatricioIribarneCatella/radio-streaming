@@ -16,6 +16,7 @@ class SenderListener(Process):
         self.frequency = frequency
         self.country = country
         self.config = config
+        self.listener_endpoint = None
 
         super(SenderListener, self).__init__()
 
@@ -37,8 +38,9 @@ class SenderListener(Process):
                     self.frequency, lid))
 
         # The leader is up
-        self.listener.connect(self.config["retransmitter_endpoints"][self.country][lid]["alive"]["connect"],
-                                timeout=cons.TIMEOUT)
+        self.listener.disconnect(self.listener_endpoint)
+        self.listener_endpoint = self.config["retransmitter_endpoints"][self.country][lid]["alive"]["connect"]
+        self.listener.connect(self.listener_endpoint, timeout=cons.TIMEOUT)
         
         # Notify the transmitter
         # which node is the leader
@@ -58,7 +60,10 @@ class SenderListener(Process):
         while True:
 
             try:
-                self.listener.recv()
+                mtype, node = self.listener.recv()
+                if node["state"] == m.NOT_LEADER:
+                    self.transmitter.send({"mtype": m.LEADER_UP, "node": 0})
+                    self._look_for_leader()
             except TimeOut:
                 print("Sender listener: Leader down")
                 self.transmitter.send({"mtype": m.LEADER_DOWN, "node": 0})
@@ -75,6 +80,7 @@ class ReceiverListener(Process):
         self.config = config
         self.frequency = frequency
         self.country = country
+        self.listener_endpoint = None
 
         super(ReceiverListener, self).__init__()
 
@@ -96,8 +102,9 @@ class ReceiverListener(Process):
                     self.frequency, lid))
 
         # The leader is up
-        self.listener.connect(self.config["retransmitter_endpoints"][self.country][lid]["alive"]["connect"],
-                                timeout=cons.TIMEOUT)
+        self.listener.disconnect(self.listener_endpoint)
+        self.listener_endpoint = self.config["retransmitter_endpoints"][self.country][lid]["alive"]["connect"]
+        self.listener.connect(self.listener_endpoint, timeout=cons.TIMEOUT)
         
         # Notify the receiver
         # which node is the leader
@@ -117,7 +124,10 @@ class ReceiverListener(Process):
         while True:
 
             try:
-                self.listener.recv()
+                mtype, node = self.listener.recv()
+                if node["state"] == m.NOT_LEADER:
+                    self.receiver.send({"mtype": m.LEADER_UP, "node": 0})
+                    self._look_for_leader()
             except TimeOut:
                 print("Receiver listener: Leader down")
                 self.receiver.send({"mtype": m.LEADER_DOWN, "node": 0})

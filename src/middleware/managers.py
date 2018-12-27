@@ -18,6 +18,9 @@ class LeaderElection(object):
 
         self.anthena = InterNode(cons.PUSH)
 
+        self.heartbeatc = InterProcess(cons.PUSH)
+        self.heartbeatc.bind("heartbeat-{}-{}".format(country, aid))
+
         self.monitorc = InterProcess(cons.PUSH)
         self.monitorc.bind("monitor-{}-{}".format(country, aid))
 
@@ -35,6 +38,10 @@ class LeaderElection(object):
     def monitor(self, message):
 
         self.monitorc.send(message)
+
+    def heartbeat(self, message):
+
+        self.heartbeatc.send(message)
 
     def send(self, message, receivers, node_type):
 

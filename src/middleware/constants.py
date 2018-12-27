@@ -10,6 +10,8 @@ TIMEOUT = HB_TIME * 2
 
 LINGER = zmq.LINGER
 
+NO_EVENTS = 0
+
 # Middleware channel types
 
 REQ = zmq.REQ
