@@ -154,6 +154,16 @@ class DataInterNode(InterNode):
 
         return freq.decode(), data
 
+class DataTopicInterNode(DataInterNode):
+
+    def __init__(self, topics):
+        super(DataTopicInterNode, self).__init__(zmq.SUB)
+        for topic in topics:
+            self.socket.setsockopt_string(zmq.SUBSCRIBE, topic)
+
+    def get_recv_format(self):
+        return "multipart-topic"
+
 class Channel(object):
 
     def __init__(self, socket, recv_type):
@@ -169,6 +179,9 @@ class Channel(object):
         elif self.recv_type == "multipart":
             mtype, freq, data = self.s.recv_multipart()
             return int(mtype.decode()), {"freq": freq.decode(), "data": data}
+        elif self.recv_type == "multipart-topic":
+            freq, data = self.s.recv_multipart()
+            return freq.decode(), data
 
     def send(self, message):
 

@@ -68,3 +68,17 @@ class SenderListener(Process):
         self.listener.close()
 
 
+class ReceiverListener(Process):
+
+    def __init__(self, frequency, country, config):
+        
+        self.config = config
+        self.frequency = frequency
+        self.country = country
+
+        super(ReceiverListener, self).__init__()
+
+    def run(self):
+        pass
+
+

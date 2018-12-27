@@ -6,7 +6,7 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 import middleware.constants as cons
 import rebroadcast.messages as m
 from stations.utils import search_leader
-from middleware.channels import InterNode, InterProcess, DataInterProcess, Poller
+from middleware.channels import InterNode, DataTopicInterNode, InterProcess, DataInterProcess, Poller
 
 class LeaderElection(object):
 
@@ -99,5 +99,47 @@ class SenderStation(object):
     def close(self):
 
         self.transmitter.close()
+
+
+class ReceiverStation(object):
+
+    def __init__(self, freq, country, config):
+ 
+        self.country = country
+        self.freq = freq
+        self.config = config
+
+        broadcasters = map(lambda x: x['output'], config['retransmitter_endpoints'][self.country])
+
+        self.receivers = []
+
+        for endpoint in broadcasters:
+            s = DataTopicInterNode([self.freq])
+            s.connect(endpoint)
+            self.receivers.append(s)
+
+        self.poller = Poller(self.receivers)
+
+    def recv(self):
+
+        socks = self.poller.poll(0.1)
+
+        for s, poll_type in socks:
+            if poll_type == cons.POLLIN:
+                freq, data = s.recv()
+                yield data
+
+    def close(self):
+
+        for s in self.receivers:
+            s.close()
+
+class InternationalReceiverStation(object):
+
+    def __init__(self):
+        pass
+
+    def run(self):
+        pass
 
 

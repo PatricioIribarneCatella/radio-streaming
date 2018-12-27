@@ -1,3 +1,4 @@
+import re
 import sys
 import json
 import argparse
@@ -5,16 +6,29 @@ from os import path
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
-from stations.receiver import Receiver
+from stations.receivers import Receiver
+from stations.receivers import InternationalReceiver
 
 def main(country, frequency, config):
+
+    match = re.match(r'^(\w{2,3})-\d{2,3}\.\d$', frequency)
+
+    if match is None:
+        print("Bad frequency format given. Must be <ISO-COUNTRY>-<FREQ>")
+        return
+
+    freq_country = match.group(1)
 
     with open(config) as f:
         config_data = json.load(f)
 
-    s = Receiver(country, frequency, config_data)
-
-    s.run()
+    if country == freq_country:
+        r = Receiver(country, frequency, config_data)
+        r.run()
+    else:
+        ir = InternationalReceiver(country, frequency,
+                                   freq_country, config)
+        ir.run()
 
 if __name__ == "__main__":
 

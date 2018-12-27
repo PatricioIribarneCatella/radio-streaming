@@ -65,6 +65,9 @@ class Sender(object):
 
             self._transmit()
 
+            t.join()
+            l.join()
+
         self.connection.close()
 
 

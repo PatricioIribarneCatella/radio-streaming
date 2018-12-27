@@ -22,9 +22,7 @@ class Retransmitter(Process):
         self.input_endpoint = config['retransmitter_endpoints'][country][node_number]['input']
         self.output_endpoint = config['retransmitter_endpoints'][country][node_number]['output']
         self.admin_endpoint = config['retransmitter_endpoints'][country][node_number]['admin']
-        #self.leader_admin_endpoint = config['retransmitter_endpoints'][country][0]['admin']
         
-        #self.is_leader = node_number == 0
         self.routers_endpoints = list(map(lambda x: x['output'], config['routers_endpoints']))
         self.outgoing_router = random.choice(config['routers_endpoints'])['input']
         
@@ -59,11 +57,6 @@ class Retransmitter(Process):
         self.admin_socket.bind('tcp://{}'.format(self.admin_endpoint))
         self.poller.register(self.admin_socket, zmq.POLLIN)
 
-        #if not self.is_leader:
-
-        #    self.leader_admin_socket = self.context.socket(zmq.REQ)
-        #    self.leader_admin_socket.connect('tcp://{}'.format(self.leader_admin_endpoint))
-
     def _transmit_message(self, frequency, message):
 
         self.output_socket.send_multipart([frequency, message])
@@ -97,44 +90,60 @@ class Retransmitter(Process):
         
         if match is None:
             print("hola1")
-            return {'status': 'invalid_frequency'}
+            return {"mtype": m.INVALID_FREQ,
+                    "node": self.node_number}
 
         country = match.group(1)
 
         if query['type'] == m.START_TRANSMITTING:
+            
             if country != self.country:
                 print("hola2")
-                return {'status': 'not_same_country'}
+                return {"mtype": m.NOT_SAME_COUNTRY,
+                        "node": self.node_number}
             try:
                 self.transmitting_state.add(query['frequency'])
                 print("hola3")
             except InUseFreq:
                 print("hola4")
-                return {"status": "in_use_freq"}
-        elif query['type'] == 'stop_transmitting':
+                return {"mtype": m.IN_USE_FREQ,
+                        "node": self.node_number}
+
+        elif query['type'] == m.STOP_TRANSMITTING:
+            
             if country != self.country:
-                return {'status': 'not_same_country'}
+                return {"mtype": m.NOT_SAME_COUNTRY,
+                        "node": self.node_number}
+
             self.transmitting_state.remove(query['frequency'])
-        elif query['type'] == 'listen_other_country':
+
+        elif query['type'] == m.LISTEN_OTHER_COUNTRY:
+            
             if country == self.country:
-                return {'status': 'same_country'}
+                return {"mtype": m.SAME_COUNTRY,
+                        "node": self.node_number}
+
             should_start_listening = self.listening_state.add(freq_code)
+            
             if should_start_listening:
                 self._start_listening(freq_code)
-        elif query['type'] == 'stop_listen_other_country':
+        
+        elif query['type'] == m.STOP_LISTEN_OTHER_COUNTRY:
+            
             if country == self.country:
-                return {'status': 'same_country'}
+                return {"mtype": m.SAME_COUNTRY,
+                        "node": self.node_number}
+
             should_stop_listening = self.listening_state.remove(freq_code)
+            
             if should_stop_listening:
                 self._stop_listening(freq_code)
         else:
-            return {'status': 'not_implemented_query'}
+            return {"mtype": m.NOT_IMPLEMENTED_QUERY,
+                    "node": self.node_number}
+        
         print("hola5")
         return {'mtype': m.OK, 'node': self.node_number}
-        
-        #else:
-        #    self.leader_admin_socket.send_json(query)
-        #    return self.leader_admin_socket.recv_json()
 
     def _respond_admin_queries(self):
        
