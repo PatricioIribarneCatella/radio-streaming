@@ -10,13 +10,12 @@ from subprocess import Popen
 
 PYTHON = "python3"
 NODES_DIR = "src/nodes/"
-CONFIG_DIR = "config.json"
 
-def run(country, aid):
+def run(country, aid, config):
 
     p = Popen([PYTHON,
                NODES_DIR + "anthena.py",
-               "--config={}".format(CONFIG_DIR),
+               "--config={}".format(config),
                "--country={}".format(country),
                "--aid={}".format(aid)])
 
@@ -27,9 +26,9 @@ def store(pid, aid, country):
     with open("pids-antenna-{}-{}.store".format(country, aid), "a") as f:
         f.write(str(pid) + "\n")
 
-def main(country, aid):
+def main(country, aid, config):
 
-    pid = run(country, aid)
+    pid = run(country, aid, config)
 
     store(pid, aid, country)
 
@@ -50,7 +49,13 @@ if __name__ == "__main__":
         type=int
     )
 
+    parser.add_argument(
+        "--config",
+        help="Configuration file",
+        default="config.json"
+    )
+
     args = parser.parse_args()
 
-    main(args.country, args.aid)
+    main(args.country, args.aid, args.config)
 
