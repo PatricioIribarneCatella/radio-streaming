@@ -54,6 +54,7 @@ class LeaderCoordinator(Process):
             
             if self.next == None:
                 self.state = Normal()
+                self.connection.heartbeat({"mtype": m.NOT_LEADER, "node": 0})
                 print("node: {} is NORMAL".format(self.aid))
 
             self.next = nid
@@ -69,6 +70,7 @@ class LeaderCoordinator(Process):
             # This node is the leader
             self.state = Leader()
             self.connection.monitor({"mtype": m.CLEAR_MONITOR, "node": 0})
+            self.connection.heartbeat({"mtype": m.LEADER, "node": 0})
             self.next = None
             print("country: {}, node: {} - is LEADER".format(
                 self.country, self.aid))
@@ -101,12 +103,14 @@ class LeaderCoordinator(Process):
             # This node is the leader
             self.state = Leader()
             self.connection.monitor({"mtype": m.CLEAR_MONITOR, "node": 0})
+            self.connection.heartbeat({"mtype": m.LEADER, "node": 0})
             self.next = None
             print("country: {}, node: {} - is LEADER".format(
                 self.country, self.aid))
         else:
             # Starts monitoring the next node
             self.connection.monitor({"mtype": m.START_MONITOR, "node": nextid})
+            self.connection.heartbeat({"mtype": m.NOT_LEADER, "node": 0})
             self.next = nextid
             self.state = Normal()
             print("country: {}, node: {} - is NORMAL".format(

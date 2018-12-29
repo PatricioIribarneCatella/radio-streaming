@@ -12,7 +12,7 @@ def main(node, config):
     with open(config) as f:
         config_data = json.load(f)
 
-    r = Router(int(node), config_data)
+    r = Router(node, config_data)
 
     r.run()
 
@@ -31,6 +31,7 @@ if __name__ == "__main__":
 
     parser.add_argument(
             "--node",
+            type=int,
             help="Number of node"
     )
 

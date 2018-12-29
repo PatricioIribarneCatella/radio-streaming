@@ -19,14 +19,13 @@ class HeartbeatSender(Thread):
         self.shutdown_flag = Event()
 
         super(HeartbeatSender, self).__init__()
-
     
     def shutdown(self):
         self.shutdown_flag.set()
 
     def _initialize(self):
+        
         print('connecting to {}'.format(self.output_endpoint))
-
 
         self.heartbeat = PublishInterNode()
         self.heartbeat.bind(self.output_endpoint)
@@ -42,3 +41,4 @@ class HeartbeatSender(Thread):
             time.sleep(cons.HB_TIME)
 
         self.heartbeat.close()
+
