@@ -44,7 +44,7 @@ if __name__ == "__main__":
 
     parser.add_argument(
             "--config",
-            default="config.json"
+            default="config.json",
             help="Topology configuration"
     )
 
