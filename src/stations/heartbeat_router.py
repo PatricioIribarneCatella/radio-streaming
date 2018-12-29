@@ -15,7 +15,6 @@ class HeartbeatSender(Thread):
 
         self.nodeid = nodeid
         self.output_endpoint = output_endpoint
-        self.quit = False
         self.shutdown_flag = Event()
 
         super(HeartbeatSender, self).__init__()
@@ -41,4 +40,5 @@ class HeartbeatSender(Thread):
             time.sleep(cons.HB_TIME)
 
         self.heartbeat.close()
+
 
