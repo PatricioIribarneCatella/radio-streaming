@@ -36,7 +36,7 @@ if __name__ == "__main__":
                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument(
-        "--aid",
+        "--rid",
         help="The router id",
         type=int
     )
