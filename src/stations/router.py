@@ -1,11 +1,11 @@
+import sys
 import zmq
-import json
-from hashlib import md5
+from os import path
 from multiprocessing import Process
 
-from .heartbeat_router import HeartbeatSender
+sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
-END_TOKEN = 'END'
+from stations.heartbeat_router import HeartbeatSender
 
 class Router(Process):
 
@@ -40,6 +40,7 @@ class Router(Process):
         return self.input_socket.recv_multipart()
     
     def _forward_message(self, topic, message):
+
         self.output_socket.send_multipart([topic, message])
 
     def _close(self):
@@ -54,12 +55,16 @@ class Router(Process):
         
         try:
             self._start_connections()
+            
             while True:
                 topic, message = self._get_message()
                 self._forward_message(topic, message)
+
         except Exception as e:
+
             print (e)
             print ("bringing down zmq device")
+
         finally:
             self._close()
 

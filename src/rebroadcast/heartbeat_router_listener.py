@@ -26,16 +26,20 @@ class HeartbeatListener(Thread):
 
     def _start_connections(self):
         
-        self.context = zmq.Context()
-        heartbeat_sockets = []
+        self.heartbeat_sockets = []
         
         for heartbeat_endpoint in self.endpoints:
             heartbeat_socket = TopicInterNode([""])
             heartbeat_socket.connect(heartbeat_endpoint)
-            heartbeat_sockets.append(heartbeat_socket)
+            self.heartbeat_sockets.append(heartbeat_socket)
         
-        self.poller = Poller(heartbeat_sockets)
-    
+        self.poller = Poller(self.heartbeat_sockets)
+ 
+    def _close(self):
+        
+        for s in self.heartbeat_sockets:
+            s.close()
+   
     def run(self):
         
         self._start_connections()
@@ -48,6 +52,6 @@ class HeartbeatListener(Thread):
                 if message_type == m.I_AM_ALIVE:
                     self.feedback_timestamps[node_number] = datetime.now()
 
-    def _close(self):
-        self.context.close()
+        self._close()
+
 
