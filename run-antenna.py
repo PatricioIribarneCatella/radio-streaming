@@ -14,7 +14,7 @@ NODES_DIR = "src/nodes/"
 def run(country, aid, config):
 
     p = Popen([PYTHON,
-               NODES_DIR + "anthena.py",
+               NODES_DIR + "antenna.py",
                "--config={}".format(config),
                "--country={}".format(country),
                "--aid={}".format(aid)])

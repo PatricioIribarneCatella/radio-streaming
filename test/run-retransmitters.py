@@ -18,7 +18,7 @@ def run(country, antennas):
 
     for aid in range(1, antennas + 1):
         p = Popen([PYTHON,
-                   NODES_DIR + "anthena.py",
+                   NODES_DIR + "antenna.py",
                    "--config={}".format(CONFIG_DIR),
                    "--country={}".format(country),
                    "--nodes={}".format(antennas),

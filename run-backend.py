@@ -6,7 +6,7 @@ from os import path
 from subprocess import Popen
 
 #
-# Runs the anthena (and its replicas)
+# Runs the antenna (and its replicas)
 # for a given topology and scenario
 #
 # Example: AR and BR with 3 nodes each,
@@ -32,7 +32,7 @@ def run(config):
         
         for node_number in range(len(country_retransmitters)):
             p = Popen([PYTHON,
-                   NODES_DIR + "anthena.py",
+                   NODES_DIR + "antenna.py",
                    "--country={}".format(country),
                    "--aid={}".format(node_number),
                    "--config={}".format(config)])

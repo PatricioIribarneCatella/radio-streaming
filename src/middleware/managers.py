@@ -3,8 +3,8 @@ from os import path
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
-import middleware.constants as cons
 import rebroadcast.messages as m
+import middleware.constants as cons
 from stations.utils import search_leader
 from middleware.channels import InterNode, DataTopicInterNode, InterProcess, DataInterProcess, Poller
 
@@ -16,7 +16,7 @@ class LeaderElection(object):
         self.config = config
         self.aid = aid
 
-        self.anthena = InterNode(cons.PUSH)
+        self.antenna = InterNode(cons.PUSH)
 
         self.heartbeatc = InterProcess(cons.PUSH)
         self.heartbeatc.bind("heartbeat-{}-{}".format(country, aid))
@@ -51,10 +51,10 @@ class LeaderElection(object):
             self.lq.send(message)
         else:
             for rid in receivers:
-                self.anthena.disconnect(interface)
+                self.antenna.disconnect(interface)
                 interface = self.config[node_type][self.country][int(rid)]["connect"]
-                self.anthena.connect(interface)
-                self.anthena.send(message)
+                self.antenna.connect(interface)
+                self.antenna.send(message)
 
     def recv(self):
 
