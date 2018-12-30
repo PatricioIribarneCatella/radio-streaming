@@ -54,8 +54,7 @@ Se corren todas la antenas que figuran en el archivo de configuración, como as�
 - Recepción:
 
 ```bash
- $ python3 src/nodes/receiver.py --freq=FREQ-CODE --country=CODE
- 													[--config=FILE(config.json)]
+ $ python3 src/nodes/receiver.py --freq=FREQ-CODE --country=CODE [--config=FILE(config.json)]
 
 	- FREQ-CODE: en el formato <ISO-PAIS>-<FREQ>
 	- CODE: el ISO del país donde se va a conectar
