@@ -1,6 +1,6 @@
 # TP-Radio-Streaming
 
-Radio Streaming (Sistemas Distribuidos I)
+Radio Streaming (_Sistemas Distribuidos I - FIUBA_)
 
 ## Ejecutar
 
